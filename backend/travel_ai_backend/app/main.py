@@ -1,3 +1,4 @@
+import os
 import gc
 import logging
 from contextlib import asynccontextmanager
@@ -11,41 +12,56 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
+import time
 from fastapi_async_sqlalchemy import SQLAlchemyMiddleware, db
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import WebSocketRateLimiter
+
 from jwt import DecodeError, ExpiredSignatureError, MissingRequiredClaimError
+
 # from langchain.chat_models import ChatOpenAI
 # from langchain.schema import HumanMessage
+from travel_ai_backend.app.db.init_elastic_db import create_indexes
 from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
 from starlette.middleware.cors import CORSMiddleware
-# from transformers import pipeline
+from starlette.responses import PlainTextResponse
 
+from prometheus_client import generate_latest
 from travel_ai_backend.app import crud
-from travel_ai_backend.app.api.deps import get_redis_client
+from travel_ai_backend.app.api.deps import (
+    get_redis_client,
+    http_200_counter,
+    http_404_counter,
+    http_500_counter,
+    http_502_counter,
+    request_count,
+    request_latency,
+)
 from travel_ai_backend.app.api.v1.api import api_router as api_router_v1
 from travel_ai_backend.app.core.config import ModeEnum, settings
 from travel_ai_backend.app.core.security import decode_token
 from travel_ai_backend.app.schemas.common_schema import IChatResponse, IUserMessage
 from travel_ai_backend.app.utils.fastapi_globals import GlobalsMiddleware, g
 from travel_ai_backend.app.utils.uuid6 import uuid7
-import os
 
 os.environ["HTTP_PROXY"] = "http://130.100.7.222:1082"
 os.environ["HTTPS_PROXY"] = "http://130.100.7.222:1082"
 
 from pydantic import BaseModel
+
+
 class MokeModel(BaseModel):
     id: int
     name: str
+
     def __init__(self, *args, **kwds):
         pass
 
     def __call__(self, *args, **kwds):
         return "World!"
-    
+
     class Config:
         orm_mode = True
 
@@ -111,6 +127,9 @@ async def lifespan(app: FastAPI):
     }
     g.set_default("sentiment_model", models["sentiment_model"])
     print("startup fastapi")
+
+    await create_indexes()
+    print(f"Индексы ElasticSearch созданы!")
     yield
     # shutdown
     await FastAPICache.clear()
@@ -169,6 +188,38 @@ class CustomException(Exception):
         self.http_code = http_code
         self.code = code if code else str(self.http_code)
         self.message = message
+
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    request_count.inc()
+    try:
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        request_latency.observe(process_time)
+        http_200_counter.inc()
+    except Exception as e:
+        if isinstance(e, HTTPException) and e.status_code == 404:
+            http_404_counter.inc()
+        elif isinstance(e, HTTPException) and e.status_code == 502:
+            http_502_counter.inc()
+        elif isinstance(e, HTTPException) and e.status_code == 500:
+            http_500_counter.inc()
+        raise e
+    else:
+        if response.status_code == 404:
+            http_404_counter.inc()
+        elif response.status_code == 502:
+            http_502_counter.inc()
+        elif response.status_code == 500:
+            http_500_counter.inc()
+    return response
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+def metrics():
+    return generate_latest()
 
 
 @app.get("/")
@@ -262,4 +313,7 @@ app.include_router(api_router_v1, prefix=settings.API_V1_STR)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("travel_ai_backend.app.main:app", host="0.0.0.0", port=8000, reload=True)
+
+    uvicorn.run(
+        "travel_ai_backend.app.main:app", host="0.0.0.0", port=8000, reload=True
+    )

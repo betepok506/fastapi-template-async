@@ -2,13 +2,11 @@ version: '3.8'
 
 services:
   fastapi_server:
-    container_name: fastapi_server
+    container_name: fastapi_server_${PROJECT_NAME}
     build: 
       context: .
       dockerfile: ./backend/Dockerfile
     restart: always
-    # command: "sh -c 'alembic upgrade head && uvicorn app.main:app --reload --workers 3 --host 0.0.0.0 --port 8000'"
-    #command: "sh -c 'alembic upgrade head && gunicorn -w 3 -k uvicorn.workers.UvicornWorker app.main:app  --bind 0.0.0.0:8000 --preload --log-level=debug --timeout 120'"
     volumes:
       - ./backend:/code
     expose:
@@ -22,70 +20,62 @@ services:
   database:
     image: bitnami/postgresql
     restart: always
-    container_name: database
+    container_name: database_${PROJECT_NAME}
     env_file: ".env"
     user: root
     volumes:
       - db_docker:/bitnami/postgresql
       - ./database/create-dbs.sql:/docker-entrypoint-initdb.d/create-dbs.sql
-    ports:
-      - 5454:5432 # Remove this on production
+    # ports:
+    #   - 5454:5432 # Remove this on production
     expose:
       - 5432
-    # environment:
-    #   - POSTGRESQL_USERNAME=${DATABASE_USER}
-    #   # - POSTGRESQL_PASSWORD=${DATABASE_PASSWORD}
-    #   # - POSTGRESQL_PASSWORD=postgres
-    #   - POSTGRESQL_DATABASE=${DATABASE_NAME}
 
   redis_server:
     image: redis:alpine
-    container_name: redis_server    
+    container_name: redis_server_${PROJECT_NAME}    
     restart: always
     expose:
       - 6379
     env_file: .env
 
   celery_worker:
-    container_name: celery_worker
+    container_name: celery_worker_${PROJECT_NAME}
     restart: always
-    # platform: linux/arm64/v8
     build:
       context: .
       dockerfile: ./backend/Dockerfile
     command: "watchfiles 'celery -A travel_ai_backend.app.core.celery worker -l info' "
     volumes:
       - ./backend:/code
-      # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery"
     depends_on:
       - database
       - redis_server
     env_file: .env
   
   celery_beat:  #Good for crontab and schedule tasks
-    container_name: celery_beat
+    container_name: celery_beat_${PROJECT_NAME}
     restart: always
-    # platform: linux/arm64/v8
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-      # args:
-      #   INSTALL_DEV: ${INSTALL_DEV-false}
     command: celery -A travel_ai_backend.app.core.celery beat -l info -S celery_sqlalchemy_scheduler.schedulers:DatabaseScheduler -l info
     volumes:
       - ./backend:/code
-      # - "${EB_LOG_BASE_DIR}/php-app:/var/log/celery-beat"
     depends_on:
       - database
       - redis_server
     env_file: .env
 
   dashboard:
+    container_name: flower_${PROJECT_NAME}
     build: 
       context: ./flower
     command: celery --broker=redis://redis_server:6379/0 flower --port=5555
-    ports:
-      - 5556:5555
+    # ports:
+    #   - 5556:5555
+    expose:
+      - 5555
     environment:
       - CELERY_BROKER_URL=redis_server://redis:6379/0
       - CELERY_RESULT_BACKEND=redis_server://redis:6379/0
@@ -94,10 +84,32 @@ services:
       - redis_server
       - celery_worker
 
+  elastic_search:
+    container_name: elastic_search_${PROJECT_NAME}
+    image: elasticsearch:8.17.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    # ports:
+    #   - 9200:9200
+    expose:
+      - 9200
+      - 9300
+
+  kibana:
+    container_name: kibana_${PROJECT_NAME}
+    image: kibana:8.16.4
+    environment:
+      - "ELASTICSEARCH_HOSTS=http://elastic_search:9200"
+    depends_on:
+      - elastic_search
+    expose:
+      - 5601
+      
   minio_server:
     image: minio/minio:latest
     restart: always
-    container_name: minio_server
+    container_name: minio_server_${PROJECT_NAME}
     volumes:
       - ./minio/data:/data
     expose:
@@ -110,11 +122,11 @@ services:
     command: "server /data --console-address ':9090'"    
 
   caddy_reverse_proxy:
-    container_name: caddy_reverse_proxy
+    container_name: caddy_reverse_proxy_${PROJECT_NAME}
     image: caddy:alpine
     restart: always
     ports:
-      - 80:80      
+      - 85:80      
       - 443:443
     environment:
       - EXT_ENDPOINT1=${EXT_ENDPOINT1}

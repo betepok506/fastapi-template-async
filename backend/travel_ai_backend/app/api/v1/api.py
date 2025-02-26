@@ -11,6 +11,7 @@ from travel_ai_backend.app.api.v1.endpoints import (
     weather,
     report,
     periodic_tasks,
+    elastic
 )
 
 api_router = APIRouter()
@@ -26,6 +27,10 @@ api_router.include_router(report.router, prefix="/report", tags=["report"])
 api_router.include_router(
     natural_language.router, prefix="/natural_language", tags=["natural_language"]
 )
+api_router.include_router(
+    elastic.router, prefix="/elastic", tags=["elastic"]
+)
+
 api_router.include_router(
     periodic_tasks.router, prefix="/periodic_tasks", tags=["periodic_tasks"]
 )

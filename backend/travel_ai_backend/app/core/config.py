@@ -33,7 +33,11 @@ class Settings(BaseSettings):
     WEB_CONCURRENCY: int = 9
     POOL_SIZE: int = max(DB_POOL_SIZE // WEB_CONCURRENCY, 5)
     ASYNC_DATABASE_URI: PostgresDsn | str = ""
-
+    
+    ELASTIC_SEARCH_DATABASE_URI: str = 'http://elastic_search:9200'
+    ELASTIC_VECTOR_INDEX: str = "text_vectors"
+    
+    
     @field_validator("ASYNC_DATABASE_URI", mode="after")
     def assemble_db_connection(cls, v: str | None, info: FieldValidationInfo) -> Any:
         if isinstance(v, str):

@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt import DecodeError, ExpiredSignatureError, MissingRequiredClaimError
 from redis.asyncio import Redis
 from sqlmodel.ext.asyncio.session import AsyncSession
+from elasticsearch import AsyncElasticsearch
 
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.core.config import settings
@@ -16,6 +17,20 @@ from travel_ai_backend.app.models.user_model import User
 from travel_ai_backend.app.schemas.common_schema import IMetaGeneral, TokenType
 from travel_ai_backend.app.utils.minio_client import MinioClient
 from travel_ai_backend.app.utils.token import get_valid_tokens
+from travel_ai_backend.app.db.session import (
+    SessionLocalElasticSearch,
+)  # , ElasticSearchSession
+from prometheus_client import Counter, Histogram
+
+request_count = Counter("http_requests_total", "Total number of requests")
+request_latency = Histogram(
+    "http_request_duration_seconds", "Request latency in seconds"
+)
+http_404_counter = Counter("http_404_errors_total", "Total number of 404 errors")
+http_502_counter = Counter("http_502_errors_total", "Total number of 502 errors")
+http_500_counter = Counter("http_500_errors_total", "Total number of 500 errors")
+http_200_counter = Counter("http_200_errors_total", "Total number of 200 response")
+
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -30,6 +45,28 @@ async def get_redis_client() -> Redis:
         decode_responses=True,
     )
     return redis
+
+
+class ElasticsearchClient:
+    _instance = None
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = AsyncElasticsearch(
+                hosts=[settings.ELASTIC_SEARCH_DATABASE_URI]
+            )
+        return cls._instance
+
+
+async def get_elasticsearch_client():
+    return ElasticsearchClient.get_instance()
+
+
+# async def get_elastic_client():
+#     return AsyncElasticsearch(hosts=[settings.ELASTIC_SEARCH_DATABASE_URI])
+#     # async with SessionLocalElasticSearch() as es:
+#     #     yield es
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

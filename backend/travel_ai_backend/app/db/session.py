@@ -4,6 +4,9 @@ from travel_ai_backend.app.core.config import ModeEnum, settings
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
+from elasticsearch import AsyncElasticsearch
+from elasticsearch.exceptions import RequestError
+from typing import List
 
 DB_POOL_SIZE = 83
 WEB_CONCURRENCY = 9
@@ -46,3 +49,15 @@ SessionLocalCelery = sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+class ElasticSearchSession:
+    def __init__(self, hosts: List[str]):
+        self.es = AsyncElasticsearch(hosts=hosts)
+
+    async def __aenter__(self):
+        return self.es
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.es.close()
+
+SessionLocalElasticSearch = ElasticSearchSession(hosts=[settings.ELASTIC_SEARCH_DATABASE_URI])
