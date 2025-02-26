@@ -2,19 +2,31 @@
   email custom@domain.com
 }
 
-fastapi.{$EXT_ENDPOINT1}:80, fastapi.{$LOCAL_1}:80, fastapi.{$LOCAL_2}:80, :80 {
+fastapi.{$EXT_ENDPOINT1}:{$CADDY_PORT}, fastapi.{$LOCAL_1}:{$CADDY_PORT}, fastapi.{$LOCAL_2}:{$CADDY_PORT}, :{$CADDY_PORT} {
   reverse_proxy fastapi_server:8000
 }
 
-storage.{$EXT_ENDPOINT1}:80, storage.{$LOCAL_1}:80, storage.{$LOCAL_2}:80 {
+storage.{$EXT_ENDPOINT1}:{$CADDY_PORT}, storage.{$LOCAL_1}:{$CADDY_PORT}, storage.{$LOCAL_2}:{$CADDY_PORT} {
   reverse_proxy minio_server:9000 
 }
 
-stash.{$EXT_ENDPOINT1}:80, stash.{$LOCAL_1}:80, stash.{$LOCAL_2}:80 {
+# elastic.{$EXT_ENDPOINT1}:{$CADDY_PORT}, elastic.{$LOCAL_1}:{$CADDY_PORT}, elastic.{$LOCAL_2}:{$CADDY_PORT} {
+#   reverse_proxy elastic_search:9200 
+# }
+
+kibana.{$EXT_ENDPOINT1}:{$CADDY_PORT}, kibana.{$LOCAL_1}:{$CADDY_PORT}, kibana.{$LOCAL_2}:{$CADDY_PORT} {
+  reverse_proxy kibana:5601 
+}
+
+stash.{$EXT_ENDPOINT1}:{$CADDY_PORT}, stash.{$LOCAL_1}:{$CADDY_PORT}, stash.{$LOCAL_2}:{$CADDY_PORT} {
   reverse_proxy minio_server:9090 
 }
 
-static.{$EXT_ENDPOINT1}:80, static.{$LOCAL_1}:80, static.{$LOCAL_2}:80 {
+flower.{$EXT_ENDPOINT1}:{$CADDY_PORT}, flower.{$LOCAL_1}:{$CADDY_PORT}, flower.{$LOCAL_2}:{$CADDY_PORT} {
+  reverse_proxy dashboard:5555 
+}
+
+static.{$EXT_ENDPOINT1}:{$CADDY_PORT}, static.{$LOCAL_1}:{$CADDY_PORT}, static.{$LOCAL_2}:{$CADDY_PORT} {
   root * /code/static
   file_server browse
 }
