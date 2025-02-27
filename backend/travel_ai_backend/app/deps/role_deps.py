@@ -1,16 +1,20 @@
+from uuid import UUID
+
+from fastapi import Path, Query
+from typing_extensions import Annotated
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.models.role_model import Role
 from travel_ai_backend.app.utils.exceptions.common_exception import (
-    NameNotFoundException,
     IdNotFoundException,
+    NameNotFoundException,
 )
-from uuid import UUID
-from fastapi import Query, Path
-from typing_extensions import Annotated
 
 
 async def get_user_role_by_name(
-    role_name: Annotated[str, Query(title="String compare with name or last name")] = ""
+    role_name: Annotated[
+        str, Query(title="String compare with name or last name")
+    ] = ""
 ) -> str:
     role = await crud.role.get_role_by_name(name=role_name)
     if not role:

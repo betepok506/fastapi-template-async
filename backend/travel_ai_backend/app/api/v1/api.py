@@ -1,17 +1,18 @@
 from fastapi import APIRouter
+
 from travel_ai_backend.app.api.v1.endpoints import (
-    natural_language,
-    user,
-    hero,
-    team,
-    login,
-    role,
-    group,
     cache,
-    weather,
-    report,
+    elastic,
+    group,
+    hero,
+    login,
+    natural_language,
     periodic_tasks,
-    elastic
+    report,
+    role,
+    team,
+    user,
+    weather,
 )
 
 api_router = APIRouter()
@@ -25,11 +26,11 @@ api_router.include_router(cache.router, prefix="/cache", tags=["cache"])
 api_router.include_router(weather.router, prefix="/weather", tags=["weather"])
 api_router.include_router(report.router, prefix="/report", tags=["report"])
 api_router.include_router(
-    natural_language.router, prefix="/natural_language", tags=["natural_language"]
+    natural_language.router,
+    prefix="/natural_language",
+    tags=["natural_language"],
 )
-api_router.include_router(
-    elastic.router, prefix="/elastic", tags=["elastic"]
-)
+api_router.include_router(elastic.router, prefix="/elastic", tags=["elastic"])
 
 api_router.include_router(
     periodic_tasks.router, prefix="/periodic_tasks", tags=["periodic_tasks"]

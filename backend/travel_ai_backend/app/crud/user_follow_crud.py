@@ -1,13 +1,22 @@
 from uuid import UUID
+
 from sqlmodel import and_, select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
 from travel_ai_backend.app.crud.base_crud import CRUDBase
-from travel_ai_backend.app.models.user_follow_model import UserFollow as UserFollowModel
+from travel_ai_backend.app.models.user_follow_model import (
+    UserFollow as UserFollowModel,
+)
 from travel_ai_backend.app.models.user_model import User
-from travel_ai_backend.app.schemas.user_follow_schema import IUserFollowCreate, IUserFollowUpdate
+from travel_ai_backend.app.schemas.user_follow_schema import (
+    IUserFollowCreate,
+    IUserFollowUpdate,
+)
 
 
-class CRUDUserFollow(CRUDBase[UserFollowModel, IUserFollowCreate, IUserFollowUpdate]):
+class CRUDUserFollow(
+    CRUDBase[UserFollowModel, IUserFollowCreate, IUserFollowUpdate]
+):
     async def follow_a_user_by_target_user_id(
         self,
         *,

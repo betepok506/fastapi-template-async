@@ -1,9 +1,11 @@
 # https://github.com/Longdh57/fastapi-minio
 
-from travel_ai_backend.app.utils.uuid6 import uuid7
 from datetime import timedelta
+
 from minio import Minio
 from pydantic import BaseModel
+
+from travel_ai_backend.app.utils.uuid6 import uuid7
 
 
 class IMinioResponse(BaseModel):
@@ -14,7 +16,11 @@ class IMinioResponse(BaseModel):
 
 class MinioClient:
     def __init__(
-        self, minio_url: str, access_key: str, secret_key: str, bucket_name: str
+        self,
+        minio_url: str,
+        access_key: str,
+        secret_key: str,
+        bucket_name: str,
     ):
         self.minio_url = minio_url
         self.access_key = access_key
@@ -36,13 +42,17 @@ class MinioClient:
     def presigned_get_object(self, bucket_name, object_name):
         # Request URL expired after 7 days
         url = self.client.presigned_get_object(
-            bucket_name=bucket_name, object_name=object_name, expires=timedelta(days=7)
+            bucket_name=bucket_name,
+            object_name=object_name,
+            expires=timedelta(days=7),
         )
         return url
 
     def check_file_name_exists(self, bucket_name, file_name):
         try:
-            self.client.stat_object(bucket_name=bucket_name, object_name=file_name)
+            self.client.stat_object(
+                bucket_name=bucket_name, object_name=file_name
+            )
             return True
         except Exception as e:
             print(f"[x] Exception: {e}")

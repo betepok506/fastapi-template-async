@@ -1,9 +1,12 @@
-from uuid import UUID
-from travel_ai_backend.app.utils.uuid6 import uuid7
-from sqlmodel import SQLModel as _SQLModel, Field
-from sqlalchemy.orm import declared_attr
 from datetime import datetime
 from typing import Union
+from uuid import UUID
+
+from sqlalchemy.orm import declared_attr
+from sqlmodel import Field
+from sqlmodel import SQLModel as _SQLModel
+
+from travel_ai_backend.app.utils.uuid6 import uuid7
 
 
 # id: implements proposal uuid7 draft4
@@ -21,6 +24,7 @@ class BaseUUIDModel(SQLModel):
         nullable=False,
     )
     updated_at: Union[datetime, None] = Field(
-        default_factory=datetime.utcnow, sa_column_kwargs={"onupdate": datetime.utcnow}
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
     )
     created_at: Union[datetime, None] = Field(default_factory=datetime.utcnow)

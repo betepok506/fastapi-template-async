@@ -1,9 +1,10 @@
-from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
 from pydantic import computed_field
 from sqlmodel import SQLModel
-from travel_ai_backend.app.utils.minio_client import MinioClient
-from travel_ai_backend.app.core.config import settings
+
 from travel_ai_backend.app import api
+from travel_ai_backend.app.core.config import settings
+from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
+from travel_ai_backend.app.utils.minio_client import MinioClient
 
 
 class MediaBase(SQLModel):

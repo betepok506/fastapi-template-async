@@ -1,5 +1,7 @@
 from typing import Generator
+
 from celery_sqlalchemy_scheduler.session import SessionManager
+
 from travel_ai_backend.app.core.config import settings
 
 

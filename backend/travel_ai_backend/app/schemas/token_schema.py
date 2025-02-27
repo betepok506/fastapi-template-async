@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+
 from .user_schema import IUserRead
 
 

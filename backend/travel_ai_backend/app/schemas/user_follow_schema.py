@@ -1,7 +1,9 @@
 from uuid import UUID
+
+from pydantic import BaseModel
+
 from travel_ai_backend.app.models.user_follow_model import UserFollowBase
 from travel_ai_backend.app.utils.partial import optional
-from pydantic import BaseModel
 
 
 class IUserFollowCreate(UserFollowBase):

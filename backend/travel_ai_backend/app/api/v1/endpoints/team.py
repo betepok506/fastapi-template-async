@@ -1,11 +1,8 @@
 from uuid import UUID
-from travel_ai_backend.app.utils.exceptions import (
-    ContentNoChangeException,
-    IdNotFoundException,
-    NameExistException,
-)
+
 from fastapi import APIRouter, Depends, status
 from fastapi_pagination import Params
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.models.team_model import Team
@@ -23,7 +20,11 @@ from travel_ai_backend.app.schemas.team_schema import (
     ITeamRead,
     ITeamUpdate,
 )
-
+from travel_ai_backend.app.utils.exceptions import (
+    ContentNoChangeException,
+    IdNotFoundException,
+    NameExistException,
+)
 
 router = APIRouter()
 
@@ -59,7 +60,9 @@ async def get_team_by_id(
 async def create_team(
     team: ITeamCreate,
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IPostResponseBase[ITeamRead]:
     """
@@ -81,7 +84,9 @@ async def update_team(
     team_id: UUID,
     new_team: ITeamUpdate,
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IPostResponseBase[ITeamRead]:
     """
@@ -105,7 +110,9 @@ async def update_team(
     if exist_team:
         raise NameExistException(Team, name=exist_team.name)
 
-    heroe_updated = await crud.team.update(obj_current=current_team, obj_new=new_team)
+    heroe_updated = await crud.team.update(
+        obj_current=current_team, obj_new=new_team
+    )
     return create_response(data=heroe_updated)
 
 
@@ -113,7 +120,9 @@ async def update_team(
 async def remove_team(
     team_id: UUID,
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IDeleteResponseBase[ITeamRead]:
     """

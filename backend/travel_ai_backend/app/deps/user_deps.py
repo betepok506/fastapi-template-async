@@ -1,12 +1,15 @@
+from uuid import UUID
+
+from fastapi import HTTPException, Path, status
+from typing_extensions import Annotated
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.models.role_model import Role
 from travel_ai_backend.app.models.user_model import User
-from travel_ai_backend.app.schemas.user_schema import IUserCreate
-from travel_ai_backend.app.schemas.user_schema import IUserRead
-from travel_ai_backend.app.utils.exceptions.common_exception import IdNotFoundException
-from uuid import UUID
-from fastapi import HTTPException, Path, status
-from typing_extensions import Annotated
+from travel_ai_backend.app.schemas.user_schema import IUserCreate, IUserRead
+from travel_ai_backend.app.utils.exceptions.common_exception import (
+    IdNotFoundException,
+)
 
 
 async def user_exists(new_user: IUserCreate) -> IUserCreate:

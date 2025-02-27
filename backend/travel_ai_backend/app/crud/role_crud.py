@@ -1,10 +1,12 @@
-from travel_ai_backend.app.schemas.role_schema import IRoleCreate, IRoleUpdate
+from uuid import UUID
+
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from travel_ai_backend.app.crud.base_crud import CRUDBase
 from travel_ai_backend.app.models.role_model import Role
 from travel_ai_backend.app.models.user_model import User
-from travel_ai_backend.app.crud.base_crud import CRUDBase
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
-from uuid import UUID
+from travel_ai_backend.app.schemas.role_schema import IRoleCreate, IRoleUpdate
 
 
 class CRUDRole(CRUDBase[Role, IRoleCreate, IRoleUpdate]):

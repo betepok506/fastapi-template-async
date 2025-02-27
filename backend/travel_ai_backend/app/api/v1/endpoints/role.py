@@ -1,9 +1,6 @@
-from travel_ai_backend.app.utils.exceptions import (
-    ContentNoChangeException,
-    NameExistException,
-)
 from fastapi import APIRouter, Depends, status
 from fastapi_pagination import Params
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.deps import role_deps
@@ -16,7 +13,16 @@ from travel_ai_backend.app.schemas.response_schema import (
     IPutResponseBase,
     create_response,
 )
-from travel_ai_backend.app.schemas.role_schema import IRoleCreate, IRoleEnum, IRoleRead, IRoleUpdate
+from travel_ai_backend.app.schemas.role_schema import (
+    IRoleCreate,
+    IRoleEnum,
+    IRoleRead,
+    IRoleUpdate,
+)
+from travel_ai_backend.app.utils.exceptions import (
+    ContentNoChangeException,
+    NameExistException,
+)
 
 router = APIRouter()
 
@@ -79,12 +85,17 @@ async def update_role(
     Required roles:
     - admin
     """
-    if current_role.name == role.name and current_role.description == role.description:
+    if (
+        current_role.name == role.name
+        and current_role.description == role.description
+    ):
         raise ContentNoChangeException()
 
     exist_role = await crud.role.get_role_by_name(name=role.name)
     if exist_role:
         raise NameExistException(Role, name=role.name)
 
-    updated_role = await crud.role.update(obj_current=current_role, obj_new=role)
+    updated_role = await crud.role.update(
+        obj_current=current_role, obj_new=role
+    )
     return create_response(data=updated_role)

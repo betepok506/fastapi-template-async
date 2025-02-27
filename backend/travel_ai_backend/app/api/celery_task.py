@@ -1,12 +1,14 @@
 import asyncio
+import logging
 import time
 from uuid import UUID
+
+from celery import Task
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.core.celery import celery
-from travel_ai_backend.app.models.hero_model import Hero
 from travel_ai_backend.app.db.session import SessionLocal
-import logging
-from celery import Task
+from travel_ai_backend.app.models.hero_model import Hero
 
 # from travel_ai_backend.app.schemas.role_schema import (
 #     IRoleCreate,
@@ -84,5 +86,7 @@ async def get_hero(hero_id: UUID) -> Hero:
 
 @celery.task(name="tasks.print_hero")
 def print_hero(hero_id: UUID) -> None:
-    hero = asyncio.get_event_loop().run_until_complete(get_hero(hero_id=hero_id))
+    hero = asyncio.get_event_loop().run_until_complete(
+        get_hero(hero_id=hero_id)
+    )
     return hero.id

@@ -1,9 +1,11 @@
-import os
 import gc
 import logging
+import os
+import time
 from contextlib import asynccontextmanager
 from typing import Any
 from uuid import UUID, uuid4
+
 from fastapi import (
     FastAPI,
     HTTPException,
@@ -12,23 +14,17 @@ from fastapi import (
     WebSocketDisconnect,
     status,
 )
-import time
 from fastapi_async_sqlalchemy import SQLAlchemyMiddleware, db
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import WebSocketRateLimiter
-
 from jwt import DecodeError, ExpiredSignatureError, MissingRequiredClaimError
-
-# from langchain.chat_models import ChatOpenAI
-# from langchain.schema import HumanMessage
-from travel_ai_backend.app.db.init_elastic_db import create_indexes
-from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
+from prometheus_client import generate_latest
+from sqlalchemy.pool import AsyncAdaptedQueuePool, NullPool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
-from prometheus_client import generate_latest
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.api.deps import (
     get_redis_client,
@@ -42,7 +38,14 @@ from travel_ai_backend.app.api.deps import (
 from travel_ai_backend.app.api.v1.api import api_router as api_router_v1
 from travel_ai_backend.app.core.config import ModeEnum, settings
 from travel_ai_backend.app.core.security import decode_token
-from travel_ai_backend.app.schemas.common_schema import IChatResponse, IUserMessage
+
+# from langchain.chat_models import ChatOpenAI
+# from langchain.schema import HumanMessage
+from travel_ai_backend.app.db.init_elastic_db import create_indexes
+from travel_ai_backend.app.schemas.common_schema import (
+    IChatResponse,
+    IUserMessage,
+)
 from travel_ai_backend.app.utils.fastapi_globals import GlobalsMiddleware, g
 from travel_ai_backend.app.utils.uuid6 import uuid7
 
@@ -154,7 +157,9 @@ app.add_middleware(
     engine_args={
         "echo": False,
         "poolclass": (
-            NullPool if settings.MODE == ModeEnum.testing else AsyncAdaptedQueuePool
+            NullPool
+            if settings.MODE == ModeEnum.testing
+            else AsyncAdaptedQueuePool
         ),
         # "pool_pre_ping": True,
         # "pool_size": settings.POOL_SIZE,
@@ -167,7 +172,9 @@ app.add_middleware(GlobalsMiddleware)
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origins=[
+            str(origin) for origin in settings.BACKEND_CORS_ORIGINS
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -248,7 +255,9 @@ async def websocket_endpoint(websocket: WebSocket, user_id: UUID):
 
     active_connection = await redis_client.get(key)
     if active_connection is None:
-        await websocket.send_text(f"Error: User ID '{user_id}' not found or inactive.")
+        await websocket.send_text(
+            f"Error: User ID '{user_id}' not found or inactive."
+        )
         await websocket.close()
     else:
         while True:
@@ -298,7 +307,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: UUID):
                     message_id="",
                     id="",
                     sender="bot",
-                    message="Sorry, something went wrong. Your user limit of api usages has been reached or check your API key.",
+                    message="Sorry, something went wrong. Your user limit of api \
+                    usages has been reached or check your API key.",
                     type="error",
                 )
                 await websocket.send_json(resp.dict())
@@ -315,5 +325,8 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "travel_ai_backend.app.main:app", host="0.0.0.0", port=8000, reload=True
+        "travel_ai_backend.app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
     )

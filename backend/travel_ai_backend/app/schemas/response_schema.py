@@ -1,10 +1,10 @@
+from collections.abc import Sequence
 from math import ceil
 from typing import Any, Generic, TypeVar
-from collections.abc import Sequence
-from fastapi_pagination import Params, Page
+
+from fastapi_pagination import Page, Params
 from fastapi_pagination.bases import AbstractPage, AbstractParams
-from pydantic import Field
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 DataType = TypeVar("DataType")
 T = TypeVar("T")
@@ -86,7 +86,9 @@ def create_response(
     | IPostResponseBase[DataType]
 ):
     if isinstance(data, IGetResponsePaginated):
-        data.message = "Data paginated correctly" if message is None else message
+        data.message = (
+            "Data paginated correctly" if message is None else message
+        )
         data.meta = meta
         return data
     if message is None:

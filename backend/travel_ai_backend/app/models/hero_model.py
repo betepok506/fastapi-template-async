@@ -1,6 +1,8 @@
-from sqlmodel import Field, Relationship, SQLModel
-from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
 from uuid import UUID
+
+from sqlmodel import Field, Relationship, SQLModel
+
+from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
 
 
 class HeroBase(SQLModel):

@@ -1,4 +1,5 @@
 import asyncio
+
 from travel_ai_backend.app.db.init_db import init_db
 from travel_ai_backend.app.db.session import SessionLocal
 

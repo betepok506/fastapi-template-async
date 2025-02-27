@@ -1,8 +1,10 @@
+from uuid import UUID
+
+from pydantic import field_validator
+
 from travel_ai_backend.app.models.hero_model import HeroBase
 from travel_ai_backend.app.models.team_model import TeamBase
 from travel_ai_backend.app.utils.partial import optional
-from uuid import UUID
-from pydantic import field_validator
 
 
 class IHeroCreate(HeroBase):

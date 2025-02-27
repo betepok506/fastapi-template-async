@@ -1,16 +1,23 @@
+from typing import Any
+from uuid import UUID
+
+from pydantic.networks import EmailStr
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from travel_ai_backend.app.core.security import (
+    get_password_hash,
+    verify_password,
+)
+from travel_ai_backend.app.crud.base_crud import CRUDBase
+from travel_ai_backend.app.crud.user_follow_crud import (
+    user_follow as UserFollowCRUD,
+)
+from travel_ai_backend.app.models.image_media_model import ImageMedia
+from travel_ai_backend.app.models.media_model import Media
+from travel_ai_backend.app.models.user_model import User
 from travel_ai_backend.app.schemas.media_schema import IMediaCreate
 from travel_ai_backend.app.schemas.user_schema import IUserCreate, IUserUpdate
-from travel_ai_backend.app.models.user_model import User
-from travel_ai_backend.app.models.media_model import Media
-from travel_ai_backend.app.models.image_media_model import ImageMedia
-from travel_ai_backend.app.core.security import verify_password, get_password_hash
-from pydantic.networks import EmailStr
-from typing import Any
-from travel_ai_backend.app.crud.base_crud import CRUDBase
-from travel_ai_backend.app.crud.user_follow_crud import user_follow as UserFollowCRUD
-from sqlmodel import select
-from uuid import UUID
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 class CRUDUser(CRUDBase[User, IUserCreate, IUserUpdate]):
@@ -18,7 +25,9 @@ class CRUDUser(CRUDBase[User, IUserCreate, IUserUpdate]):
         self, *, email: str, db_session: AsyncSession | None = None
     ) -> User | None:
         db_session = db_session or super().get_db().session
-        users = await db_session.execute(select(User).where(User.email == email))
+        users = await db_session.execute(
+            select(User).where(User.email == email)
+        )
         return users.scalar_one_or_none()
 
     async def get_by_id_active(self, *, id: UUID) -> User | None:
@@ -54,7 +63,9 @@ class CRUDUser(CRUDBase[User, IUserCreate, IUserUpdate]):
             response.append(x)
         return response
 
-    async def authenticate(self, *, email: EmailStr, password: str) -> User | None:
+    async def authenticate(
+        self, *, email: EmailStr, password: str
+    ) -> User | None:
         user = await self.get_by_email(email=email)
         if not user:
             return None

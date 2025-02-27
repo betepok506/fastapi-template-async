@@ -1,14 +1,21 @@
 from typing import Annotated
+
+import httpx
+from asyncer import asyncify, create_task_group, syncify
 from fastapi import APIRouter, Query
 from fastapi_cache.decorator import cache
-from asyncer import asyncify, create_task_group, syncify
+
 from travel_ai_backend.app.core.config import settings
-import httpx
-from travel_ai_backend.app.schemas.response_schema import IGetResponseBase, create_response
+from travel_ai_backend.app.schemas.response_schema import (
+    IGetResponseBase,
+    create_response,
+)
 
 router = APIRouter()
 
-api_reference: dict[str, str] = {"api_reference": "https://github.com/chubin/wttr.in"}
+api_reference: dict[str, str] = {
+    "api_reference": "https://github.com/chubin/wttr.in"
+}
 
 
 def get_weather_sync(city: str):
@@ -96,7 +103,9 @@ async def get_weather_async_sequencial_by_cities(
         weather_list.append(weather)
 
     return create_response(
-        message=f"Weather in {', '.join(cities)}", data=weather_list, meta=api_reference
+        message=f"Weather in {', '.join(cities)}",
+        data=weather_list,
+        meta=api_reference,
     )
 
 
@@ -116,9 +125,13 @@ async def get_weather_async_concurrent_by_cities(
     weather_list = [{}] * len(cities)
     async with create_task_group() as task_group:
         for index, city in enumerate(cities):
-            weather_list[index] = task_group.soonify(get_weather_async)(city=city)
+            weather_list[index] = task_group.soonify(get_weather_async)(
+                city=city
+            )
 
     weather_list = [weather.value for weather in weather_list]
     return create_response(
-        message=f"Weather in {', '.join(cities)}", data=weather_list, meta=api_reference
+        message=f"Weather in {', '.join(cities)}",
+        data=weather_list,
+        meta=api_reference,
     )

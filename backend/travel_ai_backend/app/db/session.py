@@ -1,12 +1,14 @@
 # https://stackoverflow.com/questions/75252097/fastapi-testing-runtimeerror-task-attached-to-a-different-loop/75444607#75444607
-from sqlalchemy.orm import sessionmaker
-from travel_ai_backend.app.core.config import ModeEnum, settings
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
+from typing import List
+
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.exceptions import RequestError
-from typing import List
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import AsyncAdaptedQueuePool, NullPool
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from travel_ai_backend.app.core.config import ModeEnum, settings
 
 DB_POOL_SIZE = 83
 WEB_CONCURRENCY = 9
@@ -17,9 +19,11 @@ connect_args = {"check_same_thread": False}
 engine = create_async_engine(
     str(settings.ASYNC_DATABASE_URI),
     echo=False,
-    poolclass=NullPool
-    if settings.MODE == ModeEnum.testing
-    else AsyncAdaptedQueuePool,  # Asincio pytest works with NullPool
+    poolclass=(
+        NullPool
+        if settings.MODE == ModeEnum.testing
+        else AsyncAdaptedQueuePool
+    ),  # Asincio pytest works with NullPool
     # pool_size=POOL_SIZE,
     # max_overflow=64,
 )
@@ -35,9 +39,11 @@ SessionLocal = sessionmaker(
 engine_celery = create_async_engine(
     str(settings.ASYNC_CELERY_BEAT_DATABASE_URI),
     echo=False,
-    poolclass=NullPool
-    if settings.MODE == ModeEnum.testing
-    else AsyncAdaptedQueuePool,  # Asincio pytest works with NullPool
+    poolclass=(
+        NullPool
+        if settings.MODE == ModeEnum.testing
+        else AsyncAdaptedQueuePool
+    ),  # Asincio pytest works with NullPool
     # pool_size=POOL_SIZE,
     # max_overflow=64,
 )
@@ -50,6 +56,7 @@ SessionLocalCelery = sessionmaker(
     expire_on_commit=False,
 )
 
+
 class ElasticSearchSession:
     def __init__(self, hosts: List[str]):
         self.es = AsyncElasticsearch(hosts=hosts)
@@ -60,4 +67,7 @@ class ElasticSearchSession:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.es.close()
 
-SessionLocalElasticSearch = ElasticSearchSession(hosts=[settings.ELASTIC_SEARCH_DATABASE_URI])
+
+SessionLocalElasticSearch = ElasticSearchSession(
+    hosts=[settings.ELASTIC_SEARCH_DATABASE_URI]
+)

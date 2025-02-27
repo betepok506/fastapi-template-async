@@ -1,5 +1,6 @@
 from typing import Any, Dict, Generic, Optional, Type, TypeVar, Union
 from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlmodel import SQLModel
 
@@ -13,7 +14,9 @@ class ContentNoChangeException(HTTPException):
         headers: Optional[Dict[str, Any]] = None,
     ) -> None:
         super().__init__(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=detail, headers=headers
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail,
+            headers=headers,
         )
 
 

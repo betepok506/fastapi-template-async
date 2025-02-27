@@ -1,10 +1,17 @@
 import os
-from pydantic_core.core_schema import FieldValidationInfo
-from pydantic import PostgresDsn, EmailStr, AnyHttpUrl, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Any
 import secrets
 from enum import Enum
+from typing import Any
+
+from pydantic import (
+    AnyHttpUrl,
+    EmailStr,
+    HttpUrl,
+    PostgresDsn,
+    field_validator,
+)
+from pydantic_core.core_schema import FieldValidationInfo
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ModeEnum(str, Enum):
@@ -33,13 +40,32 @@ class Settings(BaseSettings):
     WEB_CONCURRENCY: int = 9
     POOL_SIZE: int = max(DB_POOL_SIZE // WEB_CONCURRENCY, 5)
     ASYNC_DATABASE_URI: PostgresDsn | str = ""
-    
-    ELASTIC_SEARCH_DATABASE_URI: str = 'http://elastic_search:9200'
+
+    ELASTIC_SEARCH_DATABASE_HOST: str
+    ELASTIC_SEARCH_DATABASE_PORT: int
+    ELASTIC_SEARCH_DATABASE_URI: HttpUrl | str = ""
     ELASTIC_VECTOR_INDEX: str = "text_vectors"
-    
-    
+    ELASTIC_VECTOR_DIMS: int = 128
+
+    @field_validator("ELASTIC_SEARCH_DATABASE_URI", mode="after")
+    def assemble_elastic_db_connection(
+        cls, v: str | None, info: FieldValidationInfo
+    ) -> Any:
+        if isinstance(v, str):
+            if v == "":
+                return str(
+                    HttpUrl.build(
+                        scheme="http",
+                        host=info.data["ELASTIC_SEARCH_DATABASE_HOST"],
+                        port=info.data["ELASTIC_SEARCH_DATABASE_PORT"],
+                    )
+                )
+        return v
+
     @field_validator("ASYNC_DATABASE_URI", mode="after")
-    def assemble_db_connection(cls, v: str | None, info: FieldValidationInfo) -> Any:
+    def assemble_db_connection(
+        cls, v: str | None, info: FieldValidationInfo
+    ) -> Any:
         if isinstance(v, str):
             if v == "":
                 return PostgresDsn.build(
@@ -60,15 +86,17 @@ class Settings(BaseSettings):
     ) -> Any:
         if isinstance(v, str):
             if v == "":
-                t = str(PostgresDsn.build(
-                    scheme="postgresql",
-                    username=info.data["POSTGRESQL_USERNAME"],
-                    password=info.data["POSTGRESQL_PASSWORD"],
-                    host=info.data["POSTGRESQL_HOST"],
-                    port=info.data["POSTGRESQL_PORT"],
-                    path=info.data["DATABASE_CELERY_NAME"],
-                ))
-                return 'db+' + t
+                t = str(
+                    PostgresDsn.build(
+                        scheme="postgresql",
+                        username=info.data["POSTGRESQL_USERNAME"],
+                        password=info.data["POSTGRESQL_PASSWORD"],
+                        host=info.data["POSTGRESQL_HOST"],
+                        port=info.data["POSTGRESQL_PORT"],
+                        path=info.data["DATABASE_CELERY_NAME"],
+                    )
+                )
+                return "db+" + t
         return v
 
     SYNC_CELERY_BEAT_DATABASE_URI: PostgresDsn | str = ""
@@ -77,7 +105,7 @@ class Settings(BaseSettings):
     def assemble_celery_beat_db_connection(
         cls, v: str | None, info: FieldValidationInfo
     ) -> Any:
-        
+
         if isinstance(v, str):
             if v == "":
                 return PostgresDsn.build(

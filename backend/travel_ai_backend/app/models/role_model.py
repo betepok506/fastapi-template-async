@@ -1,4 +1,5 @@
-from sqlmodel import SQLModel, Relationship
+from sqlmodel import Relationship, SQLModel
+
 from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
 
 

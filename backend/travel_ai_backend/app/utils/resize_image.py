@@ -1,6 +1,7 @@
-from typing import Any
-from PIL import Image
 from io import BytesIO
+from typing import Any
+
+from PIL import Image
 from pydantic import BaseModel
 
 

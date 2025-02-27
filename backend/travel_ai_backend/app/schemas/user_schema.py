@@ -1,9 +1,12 @@
-from travel_ai_backend.app.utils.partial import optional
-from travel_ai_backend.app.models.user_model import UserBase
-from travel_ai_backend.app.models.group_model import GroupBase
-from pydantic import BaseModel
-from uuid import UUID
 from enum import Enum
+from uuid import UUID
+
+from pydantic import BaseModel
+
+from travel_ai_backend.app.models.group_model import GroupBase
+from travel_ai_backend.app.models.user_model import UserBase
+from travel_ai_backend.app.utils.partial import optional
+
 from .image_media_schema import IImageMediaRead
 from .role_schema import IRoleRead
 

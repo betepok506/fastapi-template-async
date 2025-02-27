@@ -1,5 +1,6 @@
 """
-This allows to use global variables inside the FastAPI application using async mode.
+This allows to use global variables inside the FastAPI application 
+using async mode.
 # Usage
 Just import `g` and then access (set/get) attributes of it:
 ```python
@@ -37,6 +38,7 @@ would result in the default value not being used.
 
 Reference: https://gist.github.com/ddanier/ead419826ac6c3d75c96f9d89bea9bd0
 """
+
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar, copy_context
 from typing import Any
@@ -123,7 +125,8 @@ async def globals_middleware_dispatch(
 
 
 class GlobalsMiddleware(BaseHTTPMiddleware):  # noqa
-    """Middleware to setup the globals context using globals_middleware_dispatch()."""
+    """Middleware to setup the globals context using
+    globals_middleware_dispatch()."""
 
     def __init__(self, app: ASGIApp) -> None:
         super().__init__(app, globals_middleware_dispatch)

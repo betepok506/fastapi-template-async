@@ -1,6 +1,8 @@
 from uuid import UUID
+
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Params
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.deps import group_deps, user_deps
@@ -59,7 +61,9 @@ async def get_group_by_id(
 async def create_group(
     group: IGroupCreate,
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IPostResponseBase[IGroupRead]:
     """
@@ -72,7 +76,9 @@ async def create_group(
     group_current = await crud.group.get_group_by_name(name=group.name)
     if group_current:
         raise NameExistException(Group, name=group.name)
-    new_group = await crud.group.create(obj_in=group, created_by_id=current_user.id)
+    new_group = await crud.group.create(
+        obj_in=group, created_by_id=current_user.id
+    )
     return create_response(data=new_group)
 
 
@@ -81,7 +87,9 @@ async def update_group(
     group: IGroupUpdate,
     current_group: Group = Depends(group_deps.get_group_by_id),
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IPutResponseBase[IGroupRead]:
     """
@@ -91,7 +99,9 @@ async def update_group(
     - admin
     - manager
     """
-    group_updated = await crud.group.update(obj_current=current_group, obj_new=group)
+    group_updated = await crud.group.update(
+        obj_current=current_group, obj_new=group
+    )
     return create_response(data=group_updated)
 
 
@@ -100,7 +110,9 @@ async def add_user_into_a_group(
     user: User = Depends(user_deps.is_valid_user),
     group: Group = Depends(group_deps.get_group_by_id),
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IPostResponseBase[IGroupRead]:
     """

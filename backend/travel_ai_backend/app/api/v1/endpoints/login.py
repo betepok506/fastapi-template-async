@@ -11,12 +11,27 @@ from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.api.deps import get_redis_client
 from travel_ai_backend.app.core import security
 from travel_ai_backend.app.core.config import settings
-from travel_ai_backend.app.core.security import decode_token, get_password_hash, verify_password
+from travel_ai_backend.app.core.security import (
+    decode_token,
+    get_password_hash,
+    verify_password,
+)
 from travel_ai_backend.app.models.user_model import User
 from travel_ai_backend.app.schemas.common_schema import IMetaGeneral, TokenType
-from travel_ai_backend.app.schemas.response_schema import IPostResponseBase, create_response
-from travel_ai_backend.app.schemas.token_schema import RefreshToken, Token, TokenRead
-from travel_ai_backend.app.utils.token import add_token_to_redis, delete_tokens, get_valid_tokens
+from travel_ai_backend.app.schemas.response_schema import (
+    IPostResponseBase,
+    create_response,
+)
+from travel_ai_backend.app.schemas.token_schema import (
+    RefreshToken,
+    Token,
+    TokenRead,
+)
+from travel_ai_backend.app.utils.token import (
+    add_token_to_redis,
+    delete_tokens,
+    get_valid_tokens,
+)
 
 router = APIRouter()
 
@@ -33,11 +48,17 @@ async def login(
     """
     user = await crud.user.authenticate(email=email, password=password)
     if not user:
-        raise HTTPException(status_code=400, detail="Email or Password incorrect")
+        raise HTTPException(
+            status_code=400, detail="Email or Password incorrect"
+        )
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="User is inactive")
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    refresh_token_expires = timedelta(
+        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+    )
     access_token = security.create_access_token(
         user.id, expires_delta=access_token_expires
     )
@@ -75,7 +96,9 @@ async def login(
 
     print("data", data)
     print("meta_data", meta_data)
-    return create_response(meta=meta_data, data=data, message="Login correctly")
+    return create_response(
+        meta=meta_data, data=data, message="Login correctly"
+    )
 
 
 @router.post("/change_password")
@@ -100,11 +123,16 @@ async def change_password(
 
     new_hashed_password = get_password_hash(new_password)
     await crud.user.update(
-        obj_current=current_user, obj_new={"hashed_password": new_hashed_password}
+        obj_current=current_user,
+        obj_new={"hashed_password": new_hashed_password},
     )
 
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    refresh_token_expires = timedelta(
+        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+    )
     access_token = security.create_access_token(
         current_user.id, expires_delta=access_token_expires
     )
@@ -169,10 +197,17 @@ async def get_new_access_token(
         valid_refresh_tokens = await get_valid_tokens(
             redis_client, user_id, TokenType.REFRESH
         )
-        if valid_refresh_tokens and body.refresh_token not in valid_refresh_tokens:
-            raise HTTPException(status_code=403, detail="Refresh token invalid")
+        if (
+            valid_refresh_tokens
+            and body.refresh_token not in valid_refresh_tokens
+        ):
+            raise HTTPException(
+                status_code=403, detail="Refresh token invalid"
+            )
 
-        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
         user = await crud.user.get(id=user_id)
         if user.is_active:
             access_token = security.create_access_token(
@@ -211,10 +246,14 @@ async def login_access_token(
         email=form_data.username, password=form_data.password
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise HTTPException(
+            status_code=400, detail="Incorrect email or password"
+        )
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
     access_token = security.create_access_token(
         user.id, expires_delta=access_token_expires
     )

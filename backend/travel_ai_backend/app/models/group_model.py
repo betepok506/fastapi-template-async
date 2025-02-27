@@ -1,8 +1,11 @@
+from uuid import UUID
+
 from sqlmodel import Field, Relationship, SQLModel
-from .links_model import LinkGroupUser
+
 from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
 from travel_ai_backend.app.models.user_model import User
-from uuid import UUID
+
+from .links_model import LinkGroupUser
 
 
 class GroupBase(SQLModel):

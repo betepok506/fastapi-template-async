@@ -1,6 +1,8 @@
+from uuid import UUID
+
 from travel_ai_backend.app.models.group_model import GroupBase
 from travel_ai_backend.app.utils.partial import optional
-from uuid import UUID
+
 from .user_schema import IUserReadWithoutGroups
 
 

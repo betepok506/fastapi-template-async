@@ -1,10 +1,12 @@
 from uuid import UUID
-from travel_ai_backend.app.api.celery_task import print_hero
-from travel_ai_backend.app.utils.exceptions import IdNotFoundException, NameNotFoundException
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi_pagination import Params
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.api import deps
+from travel_ai_backend.app.api.celery_task import print_hero
+from travel_ai_backend.app.core.authz import is_authorized
 from travel_ai_backend.app.models.hero_model import Hero
 from travel_ai_backend.app.models.user_model import User
 from travel_ai_backend.app.schemas.common_schema import IOrderEnum
@@ -23,7 +25,10 @@ from travel_ai_backend.app.schemas.response_schema import (
     create_response,
 )
 from travel_ai_backend.app.schemas.role_schema import IRoleEnum
-from travel_ai_backend.app.core.authz import is_authorized
+from travel_ai_backend.app.utils.exceptions import (
+    IdNotFoundException,
+    NameNotFoundException,
+)
 
 router = APIRouter()
 
@@ -42,9 +47,9 @@ async def get_hero_list(
 
 @router.get("/get_by_created_at")
 async def get_hero_list_order_by_created_at(
-    order: IOrderEnum
-    | None = Query(
-        default=IOrderEnum.ascendent, description="It is optional. Default is ascendent"
+    order: IOrderEnum | None = Query(
+        default=IOrderEnum.ascendent,
+        description="It is optional. Default is ascendent",
     ),
     params: Params = Depends(),
     current_user: User = Depends(deps.get_current_user()),
@@ -52,7 +57,9 @@ async def get_hero_list_order_by_created_at(
     """
     Gets a paginated list of heroes ordered by created at datetime
     """
-    heroes = await crud.hero.get_multi_paginated_ordered(params=params, order=order)
+    heroes = await crud.hero.get_multi_paginated_ordered(
+        params=params, order=order
+    )
     return create_response(data=heroes)
 
 
@@ -91,7 +98,9 @@ async def get_hero_by_name(
 async def create_hero(
     hero: IHeroCreate,
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IPostResponseBase[IHeroRead]:
     """
@@ -110,7 +119,9 @@ async def update_hero(
     hero_id: UUID,
     hero: IHeroUpdate,
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IPutResponseBase[IHeroRead]:
     """
@@ -129,7 +140,9 @@ async def update_hero(
             detail="You are not Authorized to update this heroe because you did not created it",
         )
 
-    heroe_updated = await crud.hero.update(obj_new=hero, obj_current=current_hero)
+    heroe_updated = await crud.hero.update(
+        obj_new=hero, obj_current=current_hero
+    )
     return create_response(data=heroe_updated)
 
 
@@ -137,7 +150,9 @@ async def update_hero(
 async def remove_hero(
     hero_id: UUID,
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IDeleteResponseBase[IHeroRead]:
     """

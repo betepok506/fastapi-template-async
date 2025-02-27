@@ -1,20 +1,7 @@
 from io import BytesIO
 from typing import Annotated
 from uuid import UUID
-from travel_ai_backend.app.utils.exceptions import (
-    IdNotFoundException,
-    SelfFollowedException,
-    UserFollowedException,
-    UserNotFollowedException,
-    UserSelfDeleteException,
-)
-from travel_ai_backend.app import crud
-from travel_ai_backend.app.api import deps
-from travel_ai_backend.app.deps import user_deps
-from travel_ai_backend.app.models import User, UserFollow
-from travel_ai_backend.app.models.role_model import Role
-from travel_ai_backend.app.utils.minio_client import MinioClient
-from travel_ai_backend.app.utils.resize_image import modify_image
+
 from fastapi import (
     APIRouter,
     Body,
@@ -25,6 +12,15 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi_pagination import Params
+from sqlmodel import and_, col, or_, select, text
+
+from travel_ai_backend.app import crud
+from travel_ai_backend.app.api import deps
+from travel_ai_backend.app.deps import user_deps
+from travel_ai_backend.app.models import User
+from travel_ai_backend.app.models.role_model import Role
+from travel_ai_backend.app.models.user_follow_model import UserFollow
 from travel_ai_backend.app.schemas.media_schema import IMediaCreate
 from travel_ai_backend.app.schemas.response_schema import (
     IDeleteResponseBase,
@@ -35,18 +31,25 @@ from travel_ai_backend.app.schemas.response_schema import (
     create_response,
 )
 from travel_ai_backend.app.schemas.role_schema import IRoleEnum
-from travel_ai_backend.app.schemas.user_follow_schema import IUserFollowRead
+from travel_ai_backend.app.schemas.user_follow_schema import (
+    IUserFollowRead,
+    IUserFollowReadCommon,
+)
 from travel_ai_backend.app.schemas.user_schema import (
     IUserCreate,
     IUserRead,
     IUserReadWithoutGroups,
     IUserStatus,
 )
-from travel_ai_backend.app.schemas.user_follow_schema import (
-    IUserFollowReadCommon,
+from travel_ai_backend.app.utils.exceptions import (
+    IdNotFoundException,
+    SelfFollowedException,
+    UserFollowedException,
+    UserNotFollowedException,
+    UserSelfDeleteException,
 )
-from fastapi_pagination import Params
-from sqlmodel import and_, select, col, or_, text
+from travel_ai_backend.app.utils.minio_client import MinioClient
+from travel_ai_backend.app.utils.resize_image import modify_image
 
 router = APIRouter()
 
@@ -55,7 +58,9 @@ router = APIRouter()
 async def read_users_list(
     params: Params = Depends(),
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IGetResponsePaginated[IUserReadWithoutGroups]:
     """
@@ -121,7 +126,9 @@ async def read_users_list_by_role_name(
 async def get_user_list_order_by_created_at(
     params: Params = Depends(),
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IGetResponsePaginated[IUserReadWithoutGroups]:
     """
@@ -350,7 +357,9 @@ async def unfollowing_a_user_by_id(
 async def get_user_by_id(
     user: User = Depends(user_deps.is_valid_user),
     current_user: User = Depends(
-        deps.get_current_user(required_roles=[IRoleEnum.admin, IRoleEnum.manager])
+        deps.get_current_user(
+            required_roles=[IRoleEnum.admin, IRoleEnum.manager]
+        )
     ),
 ) -> IGetResponseBase[IUserRead]:
     """

@@ -1,14 +1,20 @@
 from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_limiter.depends import RateLimiter
 
-from travel_ai_backend.app.api.celery_task import increment
 from travel_ai_backend.app.api import deps
-from travel_ai_backend.app.api.celery_task import predict_transformers_pipeline
-from travel_ai_backend.app.models.user_model import User
-from travel_ai_backend.app.utils.fastapi_globals import g
-from travel_ai_backend.app.schemas.response_schema import IPostResponseBase, create_response
+from travel_ai_backend.app.api.celery_task import (
+    increment,
+    predict_transformers_pipeline,
+)
 from travel_ai_backend.app.core.celery import celery
+from travel_ai_backend.app.models.user_model import User
+from travel_ai_backend.app.schemas.response_schema import (
+    IPostResponseBase,
+    create_response,
+)
+from travel_ai_backend.app.utils.fastapi_globals import g
 
 router = APIRouter()
 
@@ -28,7 +34,9 @@ async def sentiment_analysis_prediction(
     """
     sentiment_model = g.sentiment_model
     prediction = sentiment_model(prompt)
-    return create_response(message="Prediction got succesfully", data=prediction)
+    return create_response(
+        message="Prediction got succesfully", data=prediction
+    )
 
 
 @router.post(
@@ -45,9 +53,10 @@ async def text_generation_prediction_batch_task(
     """
     # prection_task = predict_transformers_pipeline.delay(prompt)
     delay_elapsed = datetime.utcnow() + timedelta(seconds=2)
-    prection_task = increment.apply_async(args=[1],  eta=delay_elapsed)
+    prection_task = increment.apply_async(args=[1], eta=delay_elapsed)
     return create_response(
-        message="Prediction got succesfully", data={"task_id": prection_task.task_id}
+        message="Prediction got succesfully",
+        data={"task_id": prection_task.task_id},
     )
 
 
@@ -69,12 +78,13 @@ async def text_generation_prediction_batch_task_after_some_seconds(
     # prection_task = predict_transformers_pipeline.apply_async(
     #     args=[prompt], eta=delay_elapsed
     # )
-    
-    prection_task = increment.apply_async(args=[1],  eta=delay_elapsed)
+
+    prection_task = increment.apply_async(args=[1], eta=delay_elapsed)
     return create_response(
-        message="Prediction got succesfully", data={"task_id": prection_task.task_id}
+        message="Prediction got succesfully",
+        data={"task_id": prection_task.task_id},
     )
-    
+
     # return create_response(
     #     message="Prediction got succesfully", data={"task_id": prection_task.task_id}
     # )
@@ -93,7 +103,7 @@ async def get_result_from_batch_task(task_id: str) -> IPostResponseBase:
     async_result = celery.AsyncResult(task_id)
     # print(f'result {async_result.get()}')
     if async_result.ready():
-        print(f'Ready!!')
+        print(f"Ready!!")
         if not async_result.successful():
             raise HTTPException(
                 status_code=404,

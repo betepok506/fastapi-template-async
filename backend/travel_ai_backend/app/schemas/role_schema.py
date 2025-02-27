@@ -1,7 +1,8 @@
 from enum import Enum
+from uuid import UUID
+
 from travel_ai_backend.app.models.role_model import RoleBase
 from travel_ai_backend.app.utils.partial import optional
-from uuid import UUID
 
 
 class IRoleCreate(RoleBase):

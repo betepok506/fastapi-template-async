@@ -1,8 +1,13 @@
-from travel_ai_backend.app.models.image_media_model import ImageMedia, ImageMediaBase
-from travel_ai_backend.app.models.media_model import Media
 from pydantic import model_validator
-from .media_schema import IMediaRead
+
+from travel_ai_backend.app.models.image_media_model import (
+    ImageMedia,
+    ImageMediaBase,
+)
+from travel_ai_backend.app.models.media_model import Media
 from travel_ai_backend.app.utils.partial import optional
+
+from .media_schema import IMediaRead
 
 
 # Image Media
@@ -28,7 +33,10 @@ class IImageMediaReadCombined(ImageMediaBase):
     def combine_attributes(cls, values):
         link_fields = {"link": values.get("link", None)}
         if "media" in values:
-            if isinstance(values["media"], Media) and values["media"].path is not None:
+            if (
+                isinstance(values["media"], Media)
+                and values["media"].path is not None
+            ):
                 link_fields = {"link": values["media"].link}
 
         image_media_fields = {

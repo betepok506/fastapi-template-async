@@ -4,13 +4,16 @@
 
 from copy import deepcopy
 from typing import Any, Callable, Optional, Type, TypeVar
+
 from pydantic import BaseModel, create_model
 from pydantic.fields import FieldInfo
 
 Model = TypeVar("Model", bound=Type[BaseModel])
 
 
-def optional(without_fields: list[str] | None = None) -> Callable[[Model], Model]:
+def optional(
+    without_fields: list[str] | None = None,
+) -> Callable[[Model], Model]:
     """A decorator that create a partial model.
 
     Args:

@@ -1,15 +1,18 @@
-from travel_ai_backend.app.deps.celery_deps import get_job_db
-from celery_sqlalchemy_scheduler.models import (
-    PeriodicTask,
-    IntervalSchedule,
-    CrontabSchedule,
-)
 from uuid import UUID, uuid4
-from travel_ai_backend.app.core.celery import celery
+
+from celery.schedules import crontab
+from celery_sqlalchemy_scheduler.models import (
+    CrontabSchedule,
+    IntervalSchedule,
+    PeriodicTask,
+)
+
 # from travel_ai_backend.app.api.celery_task import increment
 from fastapi import APIRouter, Depends
 from sqlmodel import select
-from celery.schedules import crontab
+
+from travel_ai_backend.app.core.celery import celery
+from travel_ai_backend.app.deps.celery_deps import get_job_db
 
 router = APIRouter()
 
@@ -24,7 +27,7 @@ async def create_periodic_task_by_crontab(celery_session=Depends(get_job_db)):
     #     )
     # celery_session.add(crontab_schedule)
     # celery_session.commit()
-    
+
     # periodic_task = PeriodicTask(
     #     crontab=crontab_schedule,
     #     name="new_interval_periodic_task_crontab_2",
@@ -35,14 +38,14 @@ async def create_periodic_task_by_crontab(celery_session=Depends(get_job_db)):
     # celery_session.add(periodic_task)
     # celery_session.commit()
     task_id = str(uuid4())
-    celery.conf.beat_schedule[f'{task_id}-run-every-midnight'] = {
-            'task': 'tasks.increment',
-            'schedule': crontab(minute='*/1'), 
-        }
-    
+    celery.conf.beat_schedule[f"{task_id}-run-every-midnight"] = {
+        "task": "tasks.increment",
+        "schedule": crontab(minute="*/1"),
+    }
+
     # eta = str(crontab(minute='*/1'))
     # increment.apply_async(args=[1],  schedule= str(timedelta(seconds=15)))
-    
+
     return {"message": "Task created"}
 
 
@@ -83,10 +86,13 @@ async def create_periodic_task_by_interval(
     interval: int, celery_session=Depends(get_job_db)
 ):
     """
-    Creates a new periodic task that runs at specified intervals using the interval schedule.
+    Creates a new periodic task that runs at specified intervals using the
+    interval schedule.
     """
     periodic_task = PeriodicTask(
-        interval=IntervalSchedule(every=interval, period=IntervalSchedule.SECONDS),
+        interval=IntervalSchedule(
+            every=interval, period=IntervalSchedule.SECONDS
+        ),
         name="new_interval_periodic_task",
         args="[8]",
         task="tasks.increment",

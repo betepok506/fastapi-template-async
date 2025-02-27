@@ -12,7 +12,9 @@ fernet = Fernet(str.encode(settings.ENCRYPT_KEY))
 JWT_ALGORITHM = "HS256"
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta = None) -> str:
+def create_access_token(
+    subject: str | Any, expires_delta: timedelta = None
+) -> str:
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
@@ -28,7 +30,9 @@ def create_access_token(subject: str | Any, expires_delta: timedelta = None) -> 
     )
 
 
-def create_refresh_token(subject: str | Any, expires_delta: timedelta = None) -> str:
+def create_refresh_token(
+    subject: str | Any, expires_delta: timedelta = None
+) -> str:
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
@@ -52,7 +56,9 @@ def decode_token(token: str) -> dict[str, Any]:
     )
 
 
-def verify_password(plain_password: str | bytes, hashed_password: str | bytes) -> bool:
+def verify_password(
+    plain_password: str | bytes, hashed_password: str | bytes
+) -> bool:
     if isinstance(plain_password, str):
         plain_password = plain_password.encode()
     if isinstance(hashed_password, str):

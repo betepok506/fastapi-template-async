@@ -1,9 +1,11 @@
-from travel_ai_backend.app.schemas.hero_schema import IHeroCreate, IHeroUpdate
 from datetime import datetime
+
+from sqlmodel import and_, col, func, select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from travel_ai_backend.app.crud.base_crud import CRUDBase
 from travel_ai_backend.app.models.hero_model import Hero
-from sqlmodel import select, func, and_, col
-from sqlmodel.ext.asyncio.session import AsyncSession
+from travel_ai_backend.app.schemas.hero_schema import IHeroCreate, IHeroUpdate
 
 
 class CRUDHero(CRUDBase[Hero, IHeroCreate, IHeroUpdate]):

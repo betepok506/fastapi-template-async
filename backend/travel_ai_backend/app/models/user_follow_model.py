@@ -1,7 +1,11 @@
 from uuid import UUID
 
-from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel, SQLModel
-from sqlmodel import Column, Field, Boolean
+from sqlmodel import Boolean, Column, Field
+
+from travel_ai_backend.app.models.base_uuid_model import (
+    BaseUUIDModel,
+    SQLModel,
+)
 
 
 class UserFollowBase(SQLModel):

@@ -1,8 +1,10 @@
-from uuid import UUID
-from travel_ai_backend.app.utils.uuid6 import uuid7
-from pydantic import BaseModel, field_validator
 from enum import Enum
+from uuid import UUID
+
+from pydantic import BaseModel, field_validator
+
 from travel_ai_backend.app.schemas.role_schema import IRoleRead
+from travel_ai_backend.app.utils.uuid6 import uuid7
 
 
 class IGenderEnum(str, Enum):

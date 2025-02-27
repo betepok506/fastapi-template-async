@@ -1,13 +1,28 @@
-from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
-from travel_ai_backend.app.models.links_model import LinkGroupUser
-from travel_ai_backend.app.models.image_media_model import ImageMedia
-from travel_ai_backend.app.schemas.common_schema import IGenderEnum
 from datetime import datetime
-from sqlmodel import BigInteger, Field, SQLModel, Relationship, Column, DateTime, String
 from typing import Optional
-from sqlalchemy_utils import ChoiceType
-from pydantic import EmailStr
 from uuid import UUID
+
+from pydantic import EmailStr
+from sqlalchemy_utils import ChoiceType
+from sqlmodel import (
+    BigInteger,
+    Column,
+    DateTime,
+    Field,
+    Relationship,
+    SQLModel,
+    String,
+)
+
+from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
+from travel_ai_backend.app.models.image_media_model import ImageMedia
+from travel_ai_backend.app.models.links_model import LinkGroupUser
+from travel_ai_backend.app.schemas.common_schema import IGenderEnum
+
+# from travel_ai_backend.app.models.base_uuid_model import BaseUUIDModel
+# from travel_ai_backend.app.models.image_media_model import ImageMedia
+# from travel_ai_backend.app.models.links_model import LinkGroupUser
+# from travel_ai_backend.app.schemas.common_schema import IGenderEnum
 
 
 class UserBase(SQLModel):
@@ -31,7 +46,9 @@ class UserBase(SQLModel):
 
 
 class User(BaseUUIDModel, UserBase, table=True):
-    hashed_password: str | None = Field(default=None, nullable=False, index=True)
+    hashed_password: str | None = Field(
+        default=None, nullable=False, index=True
+    )
     role: Optional["Role"] = Relationship(  # noqa: F821
         back_populates="users", sa_relationship_kwargs={"lazy": "joined"}
     )

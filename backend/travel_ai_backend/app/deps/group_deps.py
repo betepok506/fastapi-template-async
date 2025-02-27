@@ -1,12 +1,14 @@
+from uuid import UUID
+
+from fastapi import Path, Query
+from typing_extensions import Annotated
+
 from travel_ai_backend.app import crud
 from travel_ai_backend.app.models.group_model import Group
 from travel_ai_backend.app.utils.exceptions.common_exception import (
-    NameNotFoundException,
     IdNotFoundException,
+    NameNotFoundException,
 )
-from uuid import UUID
-from fastapi import Query, Path
-from typing_extensions import Annotated
 
 
 async def get_group_by_name(

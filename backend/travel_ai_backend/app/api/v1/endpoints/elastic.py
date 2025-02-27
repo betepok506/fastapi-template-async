@@ -1,18 +1,18 @@
-from fastapi import APIRouter, Depends, Response
 from elasticsearch import AsyncElasticsearch
+from fastapi import APIRouter, Depends, Response
 from fastapi_pagination import Params
 
-from travel_ai_backend.app.schemas.text_vector_schema import (
-    ITextVectorCreate,
-    ITextVectorSearch,
-    ITextVectorBaseRead,
-    ITextVectorSearchRead,
-)
 from travel_ai_backend.app.api.deps import get_elasticsearch_client
 from travel_ai_backend.app.schemas.response_schema import (
     IGetResponsePaginated,
     IPostResponseBase,
     create_response,
+)
+from travel_ai_backend.app.schemas.text_vector_schema import (
+    ITextVectorBaseRead,
+    ITextVectorCreate,
+    ITextVectorSearch,
+    ITextVectorSearchRead,
 )
 
 router = APIRouter()
@@ -26,11 +26,19 @@ async def add_vector(
     try:
         item = await es.index(
             index="text_vectors",
-            body={"text": text_vector.text, "vector": text_vector.vector},
+            body={"text": "sdsdas", "vector": text_vector.vector},
         )
-        return create_response(data=item, message="Вектор добавлен успешно")
+        print(f"{item['_id']=}")
+        return create_response(
+            data=ITextVectorBaseRead(
+                index=item["_index"], id=item["_id"], vector=text_vector.vector
+            ),
+            message="Вектор добавлен успешно",
+        )
     except Exception as e:
+        print()
         return Response(f"Internal server error. Error: {e}", status_code=500)
+
 
 @router.post("/search_neighbors")
 async def search_neighbors(

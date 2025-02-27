@@ -1,15 +1,17 @@
-from fastapi import HTTPException
 from typing import Any, Generic, TypeVar
 from uuid import UUID
-from travel_ai_backend.app.schemas.common_schema import IOrderEnum
-from fastapi_pagination.ext.sqlmodel import paginate
+
+from fastapi import HTTPException
 from fastapi_async_sqlalchemy import db
-from fastapi_pagination import Params, Page
+from fastapi_pagination import Page, Params
+from fastapi_pagination.ext.sqlmodel import paginate
 from pydantic import BaseModel
-from sqlmodel import SQLModel, select, func
+from sqlalchemy import exc
+from sqlmodel import SQLModel, func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel.sql.expression import Select
-from sqlalchemy import exc
+
+from travel_ai_backend.app.schemas.common_schema import IOrderEnum
 
 ModelType = TypeVar("ModelType", bound=SQLModel)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -71,7 +73,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> list[ModelType]:
         db_session = db_session or self.db.session
         if query is None:
-            query = select(self.model).offset(skip).limit(limit).order_by(self.model.id)
+            query = (
+                select(self.model)
+                .offset(skip)
+                .limit(limit)
+                .order_by(self.model.id)
+            )
         response = await db_session.execute(query)
         return response.scalars().all()
 

@@ -1,11 +1,12 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
+
 from travel_ai_backend.app import crud
-from travel_ai_backend.app.schemas.role_schema import IRoleCreate
 from travel_ai_backend.app.core.config import settings
-from travel_ai_backend.app.schemas.user_schema import IUserCreate
-from travel_ai_backend.app.schemas.team_schema import ITeamCreate
-from travel_ai_backend.app.schemas.hero_schema import IHeroCreate
 from travel_ai_backend.app.schemas.group_schema import IGroupCreate
+from travel_ai_backend.app.schemas.hero_schema import IHeroCreate
+from travel_ai_backend.app.schemas.role_schema import IRoleCreate
+from travel_ai_backend.app.schemas.team_schema import ITeamCreate
+from travel_ai_backend.app.schemas.user_schema import IUserCreate
 
 roles: list[IRoleCreate] = [
     IRoleCreate(name="admin", description="This the Admin role"),
@@ -57,11 +58,15 @@ teams: list[ITeamCreate] = [
 
 heroes: list[dict[str, str | IHeroCreate]] = [
     {
-        "data": IHeroCreate(name="Deadpond", secret_name="Dive Wilson", age=21),
+        "data": IHeroCreate(
+            name="Deadpond", secret_name="Dive Wilson", age=21
+        ),
         "team": "Z-Force",
     },
     {
-        "data": IHeroCreate(name="Rusty-Man", secret_name="Tommy Sharp", age=48),
+        "data": IHeroCreate(
+            name="Rusty-Man", secret_name="Tommy Sharp", age=48
+        ),
         "team": "Preventers",
     },
 ]
@@ -84,7 +89,9 @@ async def init_db(db_session: AsyncSession) -> None:
         )
         if not current_user:
             user["data"].role_id = role.id
-            await crud.user.create_with_role(obj_in=user["data"], db_session=db_session)
+            await crud.user.create_with_role(
+                obj_in=user["data"], db_session=db_session
+            )
 
     for group in groups:
         current_group = await crud.group.get_group_by_name(
@@ -95,7 +102,9 @@ async def init_db(db_session: AsyncSession) -> None:
                 email=users[0]["data"].email, db_session=db_session
             )
             new_group = await crud.group.create(
-                obj_in=group, created_by_id=current_user.id, db_session=db_session
+                obj_in=group,
+                created_by_id=current_user.id,
+                db_session=db_session,
             )
             current_users = []
             for user in users:
@@ -105,7 +114,9 @@ async def init_db(db_session: AsyncSession) -> None:
                     )
                 )
             await crud.group.add_users_to_group(
-                users=current_users, group_id=new_group.id, db_session=db_session
+                users=current_users,
+                group_id=new_group.id,
+                db_session=db_session,
             )
 
     for team in teams:
@@ -117,7 +128,9 @@ async def init_db(db_session: AsyncSession) -> None:
                 email=users[0]["data"].email, db_session=db_session
             )
             await crud.team.create(
-                obj_in=team, created_by_id=current_user.id, db_session=db_session
+                obj_in=team,
+                created_by_id=current_user.id,
+                db_session=db_session,
             )
 
     for heroe in heroes:
@@ -134,5 +147,7 @@ async def init_db(db_session: AsyncSession) -> None:
             new_heroe = heroe["data"]
             new_heroe.team_id = team.id
             await crud.hero.create(
-                obj_in=new_heroe, created_by_id=current_user.id, db_session=db_session
+                obj_in=new_heroe,
+                created_by_id=current_user.id,
+                db_session=db_session,
             )
