@@ -40,6 +40,6 @@ class ITextVectorBaseRead(TextVectorBase):
     id: str
 
 
-class ITextVectorSearchRead(ITextVectorBaseRead):
+class ITextVectorSearchRead(ITextVectorBaseRead, ITextVectorSearch):
     score: float
     # vector: List[float]

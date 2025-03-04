@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from fastapi_pagination import Params
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.team_crud import team
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.models.team_model import Team
 from travel_ai_backend.app.models.user_model import User
@@ -37,8 +37,7 @@ async def get_teams_list(
     """
     Gets a paginated list of teams
     """
-    teams = await crud.team.get_multi_paginated(params=params)
-    print("teams", teams)
+    teams = await team.get_multi_paginated(params=params)
     return create_response(data=teams)
 
 
@@ -50,15 +49,15 @@ async def get_team_by_id(
     """
     Gets a team by its id
     """
-    team = await crud.team.get(id=team_id)
-    if not team:
+    obj_team = await team.get(id=team_id)
+    if not obj_team:
         raise IdNotFoundException(Team, id=team_id)
-    return create_response(data=team)
+    return create_response(data=obj_team)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_team(
-    team: ITeamCreate,
+    obj_team: ITeamCreate,
     current_user: User = Depends(
         deps.get_current_user(
             required_roles=[IRoleEnum.admin, IRoleEnum.manager]
@@ -72,11 +71,11 @@ async def create_team(
     - admin
     - manager
     """
-    team_current = await crud.team.get_team_by_name(name=team.name)
+    team_current = await team.get_team_by_name(name=obj_team.name)
     if team_current:
         raise NameExistException(Team, name=team_current.name)
-    team = await crud.team.create(obj_in=team, created_by_id=current_user.id)
-    return create_response(data=team)
+    obj_team = await team.create(obj_in=obj_team, created_by_id=current_user.id)
+    return create_response(data=obj_team)
 
 
 @router.put("/{team_id}")
@@ -96,7 +95,7 @@ async def update_team(
     - admin
     - manager
     """
-    current_team = await crud.team.get(id=team_id)
+    current_team = await team.get(id=team_id)
     if not current_team:
         raise IdNotFoundException(Team, id=team_id)
 
@@ -106,11 +105,11 @@ async def update_team(
     ):
         raise ContentNoChangeException(detail="The content has not changed")
 
-    exist_team = await crud.team.get_team_by_name(name=new_team.name)
+    exist_team = await team.get_team_by_name(name=new_team.name)
     if exist_team:
         raise NameExistException(Team, name=exist_team.name)
 
-    heroe_updated = await crud.team.update(
+    heroe_updated = await team.update(
         obj_current=current_team, obj_new=new_team
     )
     return create_response(data=heroe_updated)
@@ -132,8 +131,8 @@ async def remove_team(
     - admin
     - manager
     """
-    current_team = await crud.team.get(id=team_id)
+    current_team = await team.get(id=team_id)
     if not current_team:
         raise IdNotFoundException(Team, id=team_id)
-    team = await crud.team.remove(id=team_id)
-    return create_response(data=team)
+    obj_team = await team.remove(id=team_id)
+    return create_response(data=obj_team)

@@ -6,7 +6,7 @@ from jwt import DecodeError, ExpiredSignatureError, MissingRequiredClaimError
 from pydantic import EmailStr
 from redis.asyncio import Redis
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.user_crud import user
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.api.deps import get_redis_client
 from travel_ai_backend.app.core import security
@@ -46,12 +46,12 @@ async def login(
     """
     Login for all users
     """
-    user = await crud.user.authenticate(email=email, password=password)
-    if not user:
+    obj_user = await user.authenticate(email=email, password=password)
+    if not obj_user:
         raise HTTPException(
             status_code=400, detail="Email or Password incorrect"
         )
-    elif not user.is_active:
+    elif not obj_user.is_active:
         raise HTTPException(status_code=400, detail="User is inactive")
     access_token_expires = timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -60,35 +60,35 @@ async def login(
         minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
     )
     access_token = security.create_access_token(
-        user.id, expires_delta=access_token_expires
+        obj_user.id, expires_delta=access_token_expires
     )
     refresh_token = security.create_refresh_token(
-        user.id, expires_delta=refresh_token_expires
+        obj_user.id, expires_delta=refresh_token_expires
     )
     data = Token(
         access_token=access_token,
         token_type="bearer",
         refresh_token=refresh_token,
-        user=user,
+        user=obj_user,
     )
     valid_access_tokens = await get_valid_tokens(
-        redis_client, user.id, TokenType.ACCESS
+        redis_client, obj_user.id, TokenType.ACCESS
     )
     if valid_access_tokens:
         await add_token_to_redis(
             redis_client,
-            user,
+            obj_user,
             access_token,
             TokenType.ACCESS,
             settings.ACCESS_TOKEN_EXPIRE_MINUTES,
         )
     valid_refresh_tokens = await get_valid_tokens(
-        redis_client, user.id, TokenType.REFRESH
+        redis_client, obj_user.id, TokenType.REFRESH
     )
     if valid_refresh_tokens:
         await add_token_to_redis(
             redis_client,
-            user,
+            obj_user,
             refresh_token,
             TokenType.REFRESH,
             settings.REFRESH_TOKEN_EXPIRE_MINUTES,
@@ -122,7 +122,7 @@ async def change_password(
         )
 
     new_hashed_password = get_password_hash(new_password)
-    await crud.user.update(
+    await user.update(
         obj_current=current_user,
         obj_new={"hashed_password": new_hashed_password},
     )
@@ -208,18 +208,18 @@ async def get_new_access_token(
         access_token_expires = timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-        user = await crud.user.get(id=user_id)
-        if user.is_active:
+        obj_user = await user.get(id=user_id)
+        if obj_user.is_active:
             access_token = security.create_access_token(
                 payload["sub"], expires_delta=access_token_expires
             )
             valid_access_get_valid_tokens = await get_valid_tokens(
-                redis_client, user.id, TokenType.ACCESS
+                redis_client, obj_user.id, TokenType.ACCESS
             )
             if valid_access_get_valid_tokens:
                 await add_token_to_redis(
                     redis_client,
-                    user,
+                    obj_user,
                     access_token,
                     TokenType.ACCESS,
                     settings.ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -242,28 +242,28 @@ async def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = await crud.user.authenticate(
+    obj_user = await user.authenticate(
         email=form_data.username, password=form_data.password
     )
-    if not user:
+    if not obj_user:
         raise HTTPException(
             status_code=400, detail="Incorrect email or password"
         )
-    elif not user.is_active:
+    elif not obj_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     access_token = security.create_access_token(
-        user.id, expires_delta=access_token_expires
+        obj_user.id, expires_delta=access_token_expires
     )
     valid_access_tokens = await get_valid_tokens(
-        redis_client, user.id, TokenType.ACCESS
+        redis_client, obj_user.id, TokenType.ACCESS
     )
     if valid_access_tokens:
         await add_token_to_redis(
             redis_client,
-            user,
+            obj_user,
             access_token,
             TokenType.ACCESS,
             settings.ACCESS_TOKEN_EXPIRE_MINUTES,

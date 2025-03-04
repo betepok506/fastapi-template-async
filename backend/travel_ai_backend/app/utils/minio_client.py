@@ -31,6 +31,7 @@ class MinioClient:
             access_key=self.access_key,
             secret_key=self.secret_key,
             secure=False,
+            # region="my-region"
         )
         self.make_bucket()
 

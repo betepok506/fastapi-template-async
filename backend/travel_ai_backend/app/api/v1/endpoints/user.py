@@ -15,10 +15,11 @@ from fastapi import (
 from fastapi_pagination import Params
 from sqlmodel import and_, col, or_, select, text
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.user_crud import user
+from travel_ai_backend.app.crud.user_follow_crud import user_follow
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.deps import user_deps
-from travel_ai_backend.app.models import User
+from travel_ai_backend.app.models.user_model import User
 from travel_ai_backend.app.models.role_model import Role
 from travel_ai_backend.app.models.user_follow_model import UserFollow
 from travel_ai_backend.app.schemas.media_schema import IMediaCreate
@@ -70,7 +71,7 @@ async def read_users_list(
     - admin
     - manager
     """
-    users = await crud.user.get_multi_paginated(params=params)
+    users = await user.get_multi_paginated(params=params)
     return create_response(data=users)
 
 
@@ -118,7 +119,7 @@ async def read_users_list_by_role_name(
         )
         .order_by(User.first_name)
     )
-    users = await crud.user.get_multi_paginated(query=query, params=params)
+    users = await user.get_multi_paginated(query=query, params=params)
     return create_response(data=users)
 
 
@@ -138,7 +139,7 @@ async def get_user_list_order_by_created_at(
     - admin
     - manager
     """
-    users = await crud.user.get_multi_paginated_ordered(
+    users = await user.get_multi_paginated_ordered(
         params=params, order_by="created_at"
     )
     return create_response(data=users)
@@ -164,7 +165,7 @@ async def get_following(
         .join(UserFollow, User.id == UserFollow.target_user_id)
         .where(UserFollow.user_id == current_user.id)
     )
-    users = await crud.user.get_multi_paginated(query=query, params=params)
+    users = await user.get_multi_paginated(query=query, params=params)
     return create_response(data=users)
 
 
@@ -174,19 +175,19 @@ async def get_following(
     response_class=Response,
 )
 async def check_is_followed_by_user_id(
-    user: User = Depends(user_deps.is_valid_user),
+    obj_user: User = Depends(user_deps.is_valid_user),
     current_user: User = Depends(deps.get_current_user()),
 ):
     """
     Check if a person is followed by the authenticated user
     """
-    result = await crud.user_follow.get_follow_by_user_id_and_target_user_id(
-        user_id=user.id, target_user_id=current_user.id
+    result = await user_follow.get_follow_by_user_id_and_target_user_id(
+        user_id=obj_user.id, target_user_id=current_user.id
     )
     if not result:
-        raise UserNotFollowedException(user_name=user.last_name)
+        raise UserNotFollowedException(user_name=obj_user.last_name)
 
-    raise UserFollowedException(target_user_name=user.last_name)
+    raise UserFollowedException(target_user_name=obj_user.last_name)
 
 
 @router.get("/followers")
@@ -209,7 +210,7 @@ async def get_followers(
         .join(UserFollow, User.id == UserFollow.user_id)
         .where(UserFollow.target_user_id == current_user.id)
     )
-    users = await crud.user.get_multi_paginated(params=params, query=query)
+    users = await user.get_multi_paginated(params=params, query=query)
     return create_response(data=users)
 
 
@@ -234,7 +235,7 @@ async def get_user_followed_by_user_id(
         .join(UserFollow, User.id == UserFollow.user_id)
         .where(UserFollow.target_user_id == user_id)
     )
-    users = await crud.user.get_multi_paginated(params=params, query=query)
+    users = await user.get_multi_paginated(params=params, query=query)
     return create_response(data=users)
 
 
@@ -259,7 +260,7 @@ async def get_user_following_by_user_id(
         .join(UserFollow, User.id == UserFollow.target_user_id)
         .where(UserFollow.user_id == user_id)
     )
-    users = await crud.user.get_multi_paginated(query=query, params=params)
+    users = await user.get_multi_paginated(query=query, params=params)
     return create_response(data=users)
 
 
@@ -279,20 +280,20 @@ async def check_a_user_is_followed_another_user_by_id(
     if user_id == target_user_id:
         raise SelfFollowedException()
 
-    user = await crud.user.get(id=user_id)
-    if not user:
+    obj_user = await user.get(id=user_id)
+    if not obj_user:
         raise IdNotFoundException(User, id=user_id)
 
-    target_user = await crud.user.get(id=target_user_id)
+    target_user = await user.get(id=target_user_id)
     if not target_user:
         raise IdNotFoundException(User, id=target_user_id)
 
-    result = await crud.user_follow.get_follow_by_user_id_and_target_user_id(
+    result = await user_follow.get_follow_by_user_id_and_target_user_id(
         user_id=user_id, target_user_id=target_user_id
     )
     if not result:
         raise UserNotFollowedException(
-            user_name=user.last_name, target_user_name=target_user.last_name
+            user_name=obj_user.last_name, target_user_name=target_user.last_name
         )
 
 
@@ -306,19 +307,19 @@ async def follow_a_user_by_id(
     """
     if target_user_id == current_user.id:
         raise SelfFollowedException()
-    target_user = await crud.user.get(id=target_user_id)
+    target_user = await user.get(id=target_user_id)
     if not target_user:
         raise IdNotFoundException(User, id=target_user_id)
 
     current_follow_user = (
-        await crud.user_follow.get_follow_by_user_id_and_target_user_id(
+        await user_follow.get_follow_by_user_id_and_target_user_id(
             user_id=current_user.id, target_user_id=target_user_id
         )
     )
     if current_follow_user:
         raise UserFollowedException(target_user_name=target_user.last_name)
 
-    new_user_follow = await crud.user_follow.follow_a_user_by_target_user_id(
+    new_user_follow = await user_follow.follow_a_user_by_target_user_id(
         user=current_user, target_user=target_user
     )
     return create_response(data=new_user_follow)
@@ -334,18 +335,18 @@ async def unfollowing_a_user_by_id(
     """
     if target_user_id == current_user.id:
         raise SelfFollowedException()
-    target_user = await crud.user.get(id=target_user_id)
+    target_user = await user.get(id=target_user_id)
     if not target_user:
         raise IdNotFoundException(User, id=target_user_id)
 
-    current_follow_user = await crud.user_follow.get_follow_by_target_user_id(
+    current_follow_user = await user_follow.get_follow_by_target_user_id(
         user_id=current_user.id, target_user_id=target_user_id
     )
 
     if not current_follow_user:
         raise UserNotFollowedException(user_name=target_user.last_name)
 
-    user_follow = await crud.user_follow.unfollow_a_user_by_id(
+    user_follow = await user_follow.unfollow_a_user_by_id(
         user_follow_id=current_follow_user.id,
         user=current_user,
         target_user=target_user,
@@ -355,7 +356,7 @@ async def unfollowing_a_user_by_id(
 
 @router.get("/{user_id}")
 async def get_user_by_id(
-    user: User = Depends(user_deps.is_valid_user),
+    obj_user: User = Depends(user_deps.is_valid_user),
     current_user: User = Depends(
         deps.get_current_user(
             required_roles=[IRoleEnum.admin, IRoleEnum.manager]
@@ -369,7 +370,7 @@ async def get_user_by_id(
     - admin
     - manager
     """
-    return create_response(data=user)
+    return create_response(data=obj_user)
 
 
 @router.get("")
@@ -395,8 +396,8 @@ async def create_user(
     Required roles:
     - admin
     """
-    user = await crud.user.create_with_role(obj_in=new_user)
-    return create_response(data=user)
+    obj_user = await user.create_with_role(obj_in=new_user)
+    return create_response(data=obj_user)
 
 
 @router.delete("/{user_id}")
@@ -415,8 +416,8 @@ async def remove_user(
     if current_user.id == user_id:
         raise UserSelfDeleteException()
 
-    user = await crud.user.remove(id=user_id)
-    return create_response(data=user, message="User removed")
+    obj_user = await user.remove(id=user_id)
+    return create_response(data=obj_user, message="User removed")
 
 
 @router.post("/image")
@@ -441,14 +442,14 @@ async def upload_my_image(
         media = IMediaCreate(
             title=title, description=description, path=data_file.file_name
         )
-        user = await crud.user.update_photo(
+        obj_user = await user.update_photo(
             user=current_user,
             image=media,
             heigth=image_modified.height,
             width=image_modified.width,
             file_format=image_modified.file_format,
         )
-        return create_response(data=user)
+        return create_response(data=obj_user)
     except Exception as e:
         print(e)
         return Response("Internal server error", status_code=500)
@@ -456,7 +457,7 @@ async def upload_my_image(
 
 @router.post("/{user_id}/image")
 async def upload_user_image(
-    user: User = Depends(user_deps.is_valid_user),
+    obj_user: User = Depends(user_deps.is_valid_user),
     title: str | None = Body(None),
     description: str | None = Body(None),
     image_file: UploadFile = File(...),
@@ -481,14 +482,14 @@ async def upload_user_image(
         media = IMediaCreate(
             title=title, description=description, path=data_file.file_name
         )
-        user = await crud.user.update_photo(
-            user=user,
+        obj_user = await user.update_photo(
+            user=obj_user,
             image=media,
             heigth=image_modified.height,
             width=image_modified.width,
             file_format=image_modified.file_format,
         )
-        return create_response(data=user)
+        return create_response(data=obj_user)
     except Exception as e:
         print(e)
         return Response("Internal server error", status_code=500)

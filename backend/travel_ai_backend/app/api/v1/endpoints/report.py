@@ -6,7 +6,8 @@ import pandas as pd
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.hero_crud import hero
+from travel_ai_backend.app.crud.user_crud import user
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.models.user_model import User
 from travel_ai_backend.app.schemas.hero_schema import IHeroRead
@@ -41,9 +42,9 @@ async def export_users_list(
     Required roles:
     - admin
     """
-    users = await crud.user.get_multi_ordered(limit=1000, order_by="id")
+    users = await user.get_multi_ordered(limit=1000, order_by="id")
     users_list = [
-        IUserRead.model_validate(user) for user in users
+        IUserRead.model_validate(cur_user) for cur_user in users
     ]  # Creates a pydantic list of object
     users_df = pd.DataFrame([s.__dict__ for s in users_list])
     if file_extension == FileExtensionEnum.xls:
@@ -88,9 +89,9 @@ async def export_heroes_list(
     Required roles:
     - admin
     """
-    heroes = await crud.hero.get_multi_ordered(limit=1000, order_by="id")
+    heroes = await hero.get_multi_ordered(limit=1000, order_by="id")
     heroes_list = [
-        IHeroRead.model_validate(hero) for hero in heroes
+        IHeroRead.model_validate(cur_hero) for cur_hero in heroes
     ]  # Creates a pydantic list of object
     heroes_df = pd.DataFrame([s.__dict__ for s in heroes_list])
     if file_extension == FileExtensionEnum.xls:

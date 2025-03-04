@@ -5,7 +5,7 @@ from uuid import UUID
 
 from celery import Task
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.hero_crud import hero
 from travel_ai_backend.app.core.celery import celery
 from travel_ai_backend.app.db.session import SessionLocal
 from travel_ai_backend.app.models.hero_model import Hero
@@ -80,7 +80,7 @@ def increment(value: int) -> int:
 async def get_hero(hero_id: UUID) -> Hero:
     async with SessionLocal() as session:
         await asyncio.sleep(5)  # Add a delay of 5 seconds
-        hero = await crud.hero.get(id=hero_id, db_session=session)
+        hero = await hero.get(id=hero_id, db_session=session)
         return hero
 
 

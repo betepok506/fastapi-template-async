@@ -25,7 +25,7 @@ from sqlalchemy.pool import AsyncAdaptedQueuePool, NullPool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.user_crud import user
 from travel_ai_backend.app.api.deps import (
     get_redis_client,
     http_200_counter,
@@ -49,8 +49,8 @@ from travel_ai_backend.app.schemas.common_schema import (
 from travel_ai_backend.app.utils.fastapi_globals import GlobalsMiddleware, g
 from travel_ai_backend.app.utils.uuid6 import uuid7
 
-os.environ["HTTP_PROXY"] = "http://130.100.7.222:1082"
-os.environ["HTTPS_PROXY"] = "http://130.100.7.222:1082"
+# os.environ["HTTP_PROXY"] = "http://130.100.7.222:1082"
+# os.environ["HTTPS_PROXY"] = "http://130.100.7.222:1082"
 
 from pydantic import BaseModel
 
@@ -249,7 +249,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: UUID):
     chat_history = []
 
     async with db():
-        user = await crud.user.get_by_id_active(id=user_id)
+        user = await user.get_by_id_active(id=user_id)
         if user is not None:
             await redis_client.set(key, str(websocket))
 

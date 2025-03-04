@@ -21,21 +21,24 @@ class ModeEnum(str, Enum):
 
 
 class Settings(BaseSettings):
-    MODE: ModeEnum = ModeEnum.development
+    MODE: ModeEnum = ModeEnum.testing
     API_VERSION: str = "v1"
     API_V1_STR: str = f"/api/{API_VERSION}"
     PROJECT_NAME: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 1  # 1 hour
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 100  # 100 days
     OPENAI_API_KEY: str
+    
     POSTGRESQL_USERNAME: str
     POSTGRESQL_PASSWORD: str
     POSTGRESQL_HOST: str
     POSTGRESQL_PORT: int
     POSTGRESQL_DATABASE: str
+    
     DATABASE_CELERY_NAME: str = "celery_schedule_jobs"
     REDIS_HOST: str
     REDIS_PORT: str
+    
     DB_POOL_SIZE: int = 83
     WEB_CONCURRENCY: int = 9
     POOL_SIZE: int = max(DB_POOL_SIZE // WEB_CONCURRENCY, 5)

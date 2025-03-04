@@ -64,7 +64,8 @@ async def search_neighbors(
     }
     count_elem = await es.count(index=index_name)
     result = await es.search(index=index_name, body=query, size=text_vector.k)
-    print(f"!!! {count_elem=}")
+    
+    # todo: Проверить случай, когда элементов не найдено
     response = []
     for v in result["hits"]["hits"]:
         response.append(
@@ -83,4 +84,5 @@ async def search_neighbors(
     response = IGetResponsePaginated.create(
         response, total=len(response), params=params
     )
+    print(f"!!!!!! {response}")
     return create_response(data=response, message="Search Results")

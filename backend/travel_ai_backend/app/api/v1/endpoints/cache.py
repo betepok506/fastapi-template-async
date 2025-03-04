@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 from fastapi_cache.decorator import cache
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.hero_crud import hero
 from travel_ai_backend.app.schemas.response_schema import (
     IGetResponseBase,
     create_response,
@@ -43,7 +43,7 @@ async def get_count_of_heroes_created_cached(
     """
     Gets count of heroes created on a base time (Cached response)
     """
-    count = await crud.hero.get_count_of_heroes(
+    count = await hero.get_count_of_heroes(
         start_time=datetime.combine(start_date, datetime.min.time()),
         end_time=datetime.combine(end_date, datetime.min.time()),
     )
@@ -62,7 +62,7 @@ async def get_count_of_heroes_created_no_cached(
     """
     Gets count of heroes created on a base time (No Cached response)
     """
-    count = await crud.hero.get_count_of_heroes(
+    count = await hero.get_count_of_heroes(
         start_time=datetime.combine(start_date, datetime.min.time()),
         end_time=datetime.combine(end_date, datetime.min.time()),
     )

@@ -10,7 +10,8 @@ from prometheus_client import Counter, Histogram
 from redis.asyncio import Redis
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.role_crud import role
+from travel_ai_backend.app.crud.user_crud import user
 from travel_ai_backend.app.core.config import settings
 from travel_ai_backend.app.core.security import decode_token
 from travel_ai_backend.app.db.session import (  # , ElasticSearchSession
@@ -89,7 +90,7 @@ async def get_jobs_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_general_meta() -> IMetaGeneral:
-    current_roles = await crud.role.get_multi(skip=0, limit=100)
+    current_roles = await role.get_multi(skip=0, limit=100)
     return IMetaGeneral(roles=current_roles)
 
 
@@ -125,17 +126,17 @@ def get_current_user(required_roles: list[str] = None) -> Callable[[], User]:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Could not validate credentials",
             )
-        user: User = await crud.user.get(id=user_id)
-        if not user:
+        user_obj: User = await user.get(id=user_id)
+        if not user_obj:
             raise HTTPException(status_code=404, detail="User not found")
 
-        if not user.is_active:
+        if not user_obj.is_active:
             raise HTTPException(status_code=400, detail="Inactive user")
 
         if required_roles:
             is_valid_role = False
             for role in required_roles:
-                if role == user.role.name:
+                if role == user_obj.role.name:
                     is_valid_role = True
 
             if not is_valid_role:
@@ -144,7 +145,7 @@ def get_current_user(required_roles: list[str] = None) -> Callable[[], User]:
                     detail=f"""Role "{required_roles}" is required for this action""",
                 )
 
-        return user
+        return user_obj
 
     return current_user
 

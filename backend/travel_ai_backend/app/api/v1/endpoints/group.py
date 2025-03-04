@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from fastapi_pagination import Params
 
-from travel_ai_backend.app import crud
+from travel_ai_backend.app.crud.group_crud import group
 from travel_ai_backend.app.api import deps
 from travel_ai_backend.app.deps import group_deps, user_deps
 from travel_ai_backend.app.models.group_model import Group
@@ -38,7 +38,7 @@ async def get_groups(
     """
     Gets a paginated list of groups
     """
-    groups = await crud.group.get_multi_paginated(params=params)
+    groups = await group.get_multi_paginated(params=params)
     return create_response(data=groups)
 
 
@@ -50,16 +50,16 @@ async def get_group_by_id(
     """
     Gets a group by its id
     """
-    group = await crud.group.get(id=group_id)
-    if group:
-        return create_response(data=group)
+    obj_out = await group.get(id=group_id)
+    if obj_out:
+        return create_response(data=obj_out)
     else:
         raise IdNotFoundException(Group, group_id)
 
 
 @router.post("")
 async def create_group(
-    group: IGroupCreate,
+    obj_in: IGroupCreate,
     current_user: User = Depends(
         deps.get_current_user(
             required_roles=[IRoleEnum.admin, IRoleEnum.manager]
@@ -73,18 +73,18 @@ async def create_group(
     - admin
     - manager
     """
-    group_current = await crud.group.get_group_by_name(name=group.name)
-    if group_current:
-        raise NameExistException(Group, name=group.name)
-    new_group = await crud.group.create(
-        obj_in=group, created_by_id=current_user.id
+    obj_out = await group.get_group_by_name(name=obj_in.name)
+    if obj_out:
+        raise NameExistException(Group, name=obj_in.name)
+    new_group = await group.create(
+        obj_in=obj_in, created_by_id=current_user.id
     )
     return create_response(data=new_group)
 
 
 @router.put("/{group_id}")
 async def update_group(
-    group: IGroupUpdate,
+    obj_in: IGroupUpdate,
     current_group: Group = Depends(group_deps.get_group_by_id),
     current_user: User = Depends(
         deps.get_current_user(
@@ -99,8 +99,8 @@ async def update_group(
     - admin
     - manager
     """
-    group_updated = await crud.group.update(
-        obj_current=current_group, obj_new=group
+    group_updated = await group.update(
+        obj_current=current_group, obj_new=obj_in
     )
     return create_response(data=group_updated)
 
@@ -108,7 +108,7 @@ async def update_group(
 @router.post("/add_user/{user_id}/{group_id}")
 async def add_user_into_a_group(
     user: User = Depends(user_deps.is_valid_user),
-    group: Group = Depends(group_deps.get_group_by_id),
+    obj_in: Group = Depends(group_deps.get_group_by_id),
     current_user: User = Depends(
         deps.get_current_user(
             required_roles=[IRoleEnum.admin, IRoleEnum.manager]
@@ -122,5 +122,5 @@ async def add_user_into_a_group(
     - admin
     - manager
     """
-    group = await crud.group.add_user_to_group(user=user, group_id=group.id)
-    return create_response(message="User added to group", data=group)
+    obj_out = await group.add_user_to_group(user=user, group_id=obj_in.id)
+    return create_response(message="User added to group", data=obj_out)
